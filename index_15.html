@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Philips TikTok Shop Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; font-family: 'Inter', sans-serif;
+  background: #f5f6f8; color: #111827;
+  display: flex; flex-direction: column; overflow: hidden; font-size: 14px;
+}
+
+/* HEADER */
+.hdr {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+.logo {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, #1d6fec, #6d5efc);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.hdr-text { flex: 1; }
+.hdr-name { font-size: 13px; font-weight: 600; color: #111827; }
+.hdr-sub { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+
+/* CONTROLS ROW - all toggles together */
+.hdr-controls { display: flex; align-items: center; gap: 6px; }
+
+.toggle-group {
+  display: flex; gap: 2px;
+  background: #f3f4f6;
+  border-radius: 7px; padding: 2px;
+  border: 1px solid #e5e7eb;
+}
+.tog-btn {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 11px; border-radius: 5px;
+  border: none; background: transparent;
+  color: #6b7280; cursor: pointer;
+  transition: all .13s;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: .02em;
+}
+.tog-btn.active-blue { background: #1d6fec; color: #fff; box-shadow: 0 1px 4px rgba(29,111,236,.3); }
+.tog-btn.active-green { background: #059669; color: #fff; box-shadow: 0 1px 4px rgba(5,150,105,.3); }
+.tog-btn.inactive { color: #9ca3af; }
+
+.badge-live {
+  font-size: 10px; padding: 2px 9px; border-radius: 20px;
+  color: #059669; border: 1px solid rgba(5,150,105,.25);
+  background: rgba(5,150,105,.06); font-weight: 500;
+}
+
+/* API KEY BAR */
+.api-bar {
+  background: #f0fdf4; border-bottom: 1px solid #bbf7d0;
+  padding: 8px 24px; display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0; font-size: 12px; color: #374151;
+}
+.api-bar.hidden { display: none; }
+.api-bar input {
+  flex: 1; max-width: 380px;
+  border: 1px solid #86efac; border-radius: 7px;
+  padding: 6px 12px; font-size: 12.5px;
+  font-family: monospace; color: #111827;
+  background: #fff; outline: none;
+  transition: border-color .15s;
+}
+.api-bar input:focus { border-color: #059669; box-shadow: 0 0 0 2px rgba(5,150,105,.1); }
+.api-bar input::placeholder { color: #9ca3af; font-family: 'Inter', sans-serif; font-size: 12px; }
+.api-save {
+  padding: 5px 14px; border-radius: 7px; border: none;
+  background: #059669; color: #fff; font-size: 12px;
+  font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background .13s;
+}
+.api-save:hover { background: #047857; }
+.api-clear {
+  padding: 5px 10px; border-radius: 7px;
+  border: 1px solid #e5e7eb; background: #fff;
+  color: #6b7280; font-size: 12px; cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+.api-clear:hover { color: #dc2626; border-color: #dc2626; }
+.api-msg { font-size: 11px; color: #059669; font-weight: 500; }
+.api-hint { font-size: 11px; color: #9ca3af; }
+.api-hint a { color: #1d6fec; text-decoration: none; }
+
+/* MAIN APP */
+#app { flex: 1; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+
+/* WELCOME */
+#welcome {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 28px 24px; gap: 24px;
+  overflow-y: auto; transition: opacity .2s;
+  background: linear-gradient(180deg, #fff 0%, #f5f6f8 100%);
+}
+#welcome.gone { opacity: 0; pointer-events: none; position: absolute; width: 100%; height: 100%; }
+.wt { text-align: center; max-width: 500px; }
+.wt h1 { font-size: 26px; font-weight: 600; color: #111827; letter-spacing: -.5px; margin-bottom: 8px; }
+.wt p { font-size: 14px; color: #6b7280; line-height: 1.6; }
+
+/* QUICK CARDS */
+.qs { width: 100%; max-width: 720px; }
+.qs-lbl { font-size: 11px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 9px; }
+.qs-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.qcard {
+  background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 12px; padding: 14px 16px;
+  cursor: pointer; transition: all .13s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+.qcard:hover { border-color: #1d6fec; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(29,111,236,.1); }
+.qcard-i { font-size: 16px; margin-bottom: 7px; }
+.qcard-t { font-size: 13px; font-weight: 600; color: #111827; line-height: 1.3; }
+.qcard-d { font-size: 11.5px; color: #6b7280; margin-top: 3px; line-height: 1.4; }
+
+/* WELCOME INPUT */
+.winp { width: 100%; max-width: 680px; }
+.winp-box {
+  display: flex; gap: 8px; align-items: center;
+  background: #fff; border: 1.5px solid #e5e7eb;
+  border-radius: 14px; padding: 11px 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  transition: border-color .15s;
+}
+.winp-box:focus-within { border-color: #1d6fec; box-shadow: 0 0 0 3px rgba(29,111,236,.08); }
+.winp-box textarea {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: 'Inter', sans-serif; font-size: 14.5px;
+  color: #111827; resize: none; height: 24px; max-height: 80px; line-height: 1.5;
+}
+.winp-box textarea::placeholder { color: #9ca3af; }
+.wsend {
+  width: 34px; height: 34px; border-radius: 9px; border: none;
+  background: #1d6fec; color: #fff; cursor: pointer;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .13s;
+  box-shadow: 0 2px 6px rgba(29,111,236,.3);
+}
+.wsend:hover { background: #1558d0; }
+.whint { font-size: 11px; color: #9ca3af; text-align: center; margin-top: 8px; }
+
+/* CHAT */
+#chat {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; opacity: 0; pointer-events: none;
+  position: absolute; width: 100%; height: 100%; transition: opacity .2s;
+}
+#chat.on { opacity: 1; pointer-events: all; position: relative; }
+
+/* CHIPS */
+.chips {
+  padding: 7px 16px; background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex; gap: 4px; flex-wrap: wrap;
+  flex-shrink: 0; align-items: center;
+}
+.chip {
+  font-size: 11px; padding: 3px 10px; border-radius: 5px;
+  border: 1px solid #e5e7eb; color: #6b7280;
+  cursor: pointer; background: transparent;
+  transition: all .11s; white-space: nowrap;
+  font-family: 'Inter', sans-serif; font-weight: 500;
+}
+.chip:hover { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
+.chip.r { color: #dc2626; border-color: rgba(220,38,38,.25); }
+.chip.r:hover { background: rgba(220,38,38,.05); }
+.chip.b { color: #1d6fec; border-color: rgba(29,111,236,.3); background: rgba(29,111,236,.04); }
+.chip.b:hover { background: rgba(29,111,236,.08); }
+.chip.g { color: #059669; border-color: rgba(5,150,105,.3); background: rgba(5,150,105,.04); }
+.chip.g:hover { background: rgba(5,150,105,.08); }
+.chip.a { color: #d97706; border-color: rgba(217,119,6,.3); background: rgba(217,119,6,.04); }
+.chip.a:hover { background: rgba(217,119,6,.08); }
+.home-btn {
+  margin-left: auto; font-size: 11px; color: #9ca3af;
+  cursor: pointer; padding: 3px 9px; border-radius: 5px;
+  transition: all .11s; flex-shrink: 0;
+  font-family: 'Inter', sans-serif;
+}
+.home-btn:hover { color: #111827; background: #f3f4f6; }
+
+/* MESSAGES */
+#msgs {
+  flex: 1; overflow-y: auto; padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  scrollbar-width: thin; scrollbar-color: #e5e7eb transparent;
+}
+#msgs::-webkit-scrollbar { width: 3px; }
+#msgs::-webkit-scrollbar-thumb { background: #e5e7eb; }
+.msg { display: flex; gap: 9px; align-items: flex-start; animation: fu .18s ease; }
+.msg.user { flex-direction: row-reverse; }
+@keyframes fu { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+.av {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+.av.ai { background: rgba(29,111,236,.1); border: 1px solid rgba(29,111,236,.2); color: #1d6fec; }
+.av.user { background: #e8f0fe; border: 1px solid rgba(29,111,236,.15); color: #1d6fec; }
+.bubble {
+  max-width: 80%; padding: 12px 16px; border-radius: 12px;
+  border: 1px solid #e5e7eb; font-size: 13.5px; line-height: 1.65;
+}
+.msg.user .bubble { background: #e8f0fe; border-radius: 12px 12px 3px 12px; color: #374151; border-color: rgba(29,111,236,.15); }
+.msg.assistant .bubble { background: #fff; border-radius: 12px 12px 12px 3px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+.bubble p { margin-bottom: 6px; color: #4b5563; }
+.bubble p:last-child { margin-bottom: 0; }
+.bubble strong { font-weight: 600; color: #111827; }
+.bubble h3 { font-size: 10.5px; font-weight: 700; color: #9ca3af; margin: 11px 0 5px; letter-spacing: .05em; text-transform: uppercase; }
+.bubble h3:first-child { margin-top: 0; }
+.bubble ul, .bubble ol { padding-left: 17px; margin: 5px 0; }
+.bubble li { margin-bottom: 3px; color: #4b5563; line-height: 1.55; }
+.bubble table { border-collapse: collapse; width: 100%; font-size: 12px; margin: 7px 0; }
+.bubble th { text-align: left; padding: 6px 11px; font-weight: 600; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: #6b7280; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.bubble td { padding: 6px 11px; border-bottom: 1px solid #f3f4f6; color: #4b5563; font-size: 12.5px; }
+.bubble tr:last-child td { border-bottom: none; }
+.bubble td:first-child { color: #111827; font-weight: 500; }
+.bubble tr:hover td { background: #fafafa; }
+.num { font-weight: 600; color: #111827; }
+.up { color: #059669; } .dn { color: #dc2626; } .wrn { color: #d97706; }
+.bdg { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; margin-right: 3px; }
+.b-red { background: rgba(220,38,38,.08); color: #dc2626; border: 1px solid rgba(220,38,38,.2); }
+.b-amber { background: rgba(217,119,6,.08); color: #b45309; border: 1px solid rgba(217,119,6,.2); }
+.b-blue { background: rgba(29,111,236,.08); color: #1d4ed8; border: 1px solid rgba(29,111,236,.2); }
+.b-green { background: rgba(5,150,105,.08); color: #065f46; border: 1px solid rgba(5,150,105,.2); }
+.dots { display: flex; gap: 4px; align-items: center; padding: 2px 0; }
+.dots span { width: 5px; height: 5px; border-radius: 50%; background: #d1d5db; animation: bl 1.3s infinite; }
+.dots span:nth-child(2) { animation-delay: .2s; } .dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes bl { 0%,80%,100% { opacity:.2; } 40% { opacity:1; } }
+
+/* CHAT INPUT */
+.cinp {
+  padding: 12px 24px; border-top: 1px solid #e5e7eb;
+  background: #fff; display: flex; gap: 8px;
+  flex-shrink: 0; align-items: flex-end;
+}
+.cinp textarea {
+  flex: 1; font-family: 'Inter', sans-serif; font-size: 13.5px;
+  resize: none; border: 1.5px solid #e5e7eb; border-radius: 10px;
+  padding: 9px 13px; line-height: 1.5; height: 40px; max-height: 110px;
+  background: #f9fafb; color: #111827; outline: none; transition: all .15s;
+}
+.cinp textarea:focus { border-color: #1d6fec; background: #fff; box-shadow: 0 0 0 3px rgba(29,111,236,.06); }
+.cinp textarea::placeholder { color: #9ca3af; }
+.csend {
+  width: 40px; height: 40px; border-radius: 10px;
+  border: none; background: #1d6fec; color: #fff;
+  cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .13s; flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(29,111,236,.3);
+}
+.csend:hover { background: #1558d0; }
+
+@media (max-width:640px) {
+  .qs-grid { grid-template-columns: repeat(2,1fr); }
+  .bubble { max-width: 92%; }
+  #msgs { padding: 12px 14px; }
+  .hdr { padding: 9px 14px; }
+  .api-bar { padding: 7px 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">PH</div>
+  <div class="hdr-text">
+    <div class="hdr-name">Philips TikTok Shop &#8212; Analytics</div>
+    <div class="hdr-sub" id="ui-hdr-sub">Germany &#183; Nov 2025 &#8211; May 2026</div>
+  </div>
+  <div class="hdr-controls">
+    <span class="badge-live">&#9679; Ready</span>
+
+    <!-- API KEY TOGGLE -->
+    <div class="toggle-group">
+      <button class="tog-btn inactive" id="btn-no-key" onclick="setApiMode('off')">No Key</button>
+      <button class="tog-btn inactive" id="btn-with-key" onclick="setApiMode('on')">API Key</button>
+    </div>
+
+    <!-- LANGUAGE TOGGLE -->
+    <div class="toggle-group">
+      <button class="tog-btn active-blue" id="btn-en" onclick="setLang('en')">EN</button>
+      <button class="tog-btn inactive" id="btn-de" onclick="setLang('de')">DE</button>
+    </div>
+  </div>
+</div>
+
+<!-- API KEY BAR — slides in when API Key clicked -->
+<div class="api-bar hidden" id="api-bar">
+  <span>&#128273;</span>
+  <span>Anthropic API key:</span>
+  <input type="password" id="api-key-input"
+    placeholder="sk-ant-api03-..."
+    onkeydown="if(event.key==='Enter') saveApiKey()" />
+  <button class="api-save" onclick="saveApiKey()">Save</button>
+  <button class="api-clear" onclick="clearApiKey()">Clear</button>
+  <span class="api-msg" id="api-msg"></span>
+  <span class="api-hint">Get a key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></span>
+</div>
+
+<div id="app">
+  <div id="welcome">
+    <div class="wt">
+      <h1 id="ui-title">Philips TikTok Shop Analytics</h1>
+      <p id="ui-subtitle">Germany &#183; Nov 2025 &#8211; May 2026 &#183; Ask in English or German</p>
+    </div>
+    <div class="qs">
+      <div class="qs-lbl" id="ui-qs-lbl">Quick questions</div>
+      <div class="qs-grid">
+        <div class="qcard" onclick="ask('what should I do this week to improve')">
+          <div class="qcard-i">&#9889;</div>
+          <div class="qcard-t" id="ui-q1-t">What to do this week?</div>
+          <div class="qcard-d" id="ui-q1-d">Concrete action plan from live data</div>
+        </div>
+        <div class="qcard" onclick="ask('give me a 1 year plan to improve stats')">
+          <div class="qcard-i">&#128197;</div>
+          <div class="qcard-t" id="ui-q2-t">1-year plan</div>
+          <div class="qcard-d" id="ui-q2-d">Month-by-month improvement roadmap</div>
+        </div>
+        <div class="qcard" onclick="ask('gmv max full year campaigns all history')">
+          <div class="qcard-i">&#128226;</div>
+          <div class="qcard-t" id="ui-q3-t">GMV Max full year</div>
+          <div class="qcard-d" id="ui-q3-d">All campaigns, ROI, top creators</div>
+        </div>
+        <div class="qcard" onclick="ask('top creator analysis rank best worst')">
+          <div class="qcard-i">&#128101;</div>
+          <div class="qcard-t" id="ui-q4-t">Creator analysis</div>
+          <div class="qcard-d" id="ui-q4-d">Who to scale, who to pause</div>
+        </div>
+        <div class="qcard" onclick="ask('3 year strategic roadmap 2026 2027 2028')">
+          <div class="qcard-i">&#128301;</div>
+          <div class="qcard-t" id="ui-q5-t">3-year strategy</div>
+          <div class="qcard-d" id="ui-q5-d">2026 to 2027 to 2028 roadmap</div>
+        </div>
+        <div class="qcard" onclick="ask('refund rate problem why so high')">
+          <div class="qcard-i">&#8617;</div>
+          <div class="qcard-t" id="ui-q6-t">Refund problem</div>
+          <div class="qcard-d" id="ui-q6-d">24.9% affiliate rate &#8212; root cause</div>
+        </div>
+      </div>
+    </div>
+    <div class="winp">
+      <div class="winp-box">
+        <textarea id="wq" placeholder="Ask anything in English or German&#8230;"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWelcome()}"
+          oninput="this.style.height='24px';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+        <button class="wsend" onclick="sendWelcome()">&#10148;</button>
+      </div>
+      <div class="whint" id="ui-hint">Philips TikTok Shop Germany &#183; EN / DE</div>
+    </div>
+  </div>
+
+  <div id="chat">
+    <div class="chips">
+      <div class="chip r" onclick="ask('dashboard alerts problems')" id="ui-chip-alerts">&#128680; Alerts</div>
+      <div class="chip" onclick="ask('overall health check overview')" id="ui-chip-health">Health</div>
+      <div class="chip" onclick="ask('gmv full year jan may 2026')" id="ui-chip-gmv">GMV</div>
+      <div class="chip" onclick="ask('campaigns ranked all 2026')" id="ui-chip-camp">Campaigns</div>
+      <div class="chip" onclick="ask('gmv max performance campaigns')" id="ui-chip-gmvmax">GMV Max</div>
+      <div class="chip" onclick="ask('gmv max full year campaigns all history')" id="ui-chip-gmvmaxyear">GMV Max year</div>
+      <div class="chip" onclick="ask('best creatives top video roi')" id="ui-chip-creatives">Best creatives</div>
+      <div class="chip r" onclick="ask('live gmv max campaigns')" id="ui-chip-livegmvmax">&#128308; LIVE GMV Max</div>
+      <div class="chip" onclick="ask('ads manager full year overview')" id="ui-chip-ads">Full-year ads</div>
+      <div class="chip" onclick="ask('top creator analysis rank best worst')" id="ui-chip-creators">Creators</div>
+      <div class="chip" onclick="ask('refund rate problem why so high')" id="ui-chip-refunds">Refunds</div>
+      <div class="chip" onclick="ask('product catalogue stock status')" id="ui-chip-stock">Stock</div>
+      <div class="chip" onclick="ask('live stream performance trends daily')" id="ui-chip-live">LIVE</div>
+      <div class="chip" onclick="ask('video performance trends daily gpm')" id="ui-chip-video">Video</div>
+      <div class="chip" onclick="ask('transaction analysis full programme history')" id="ui-chip-programme">Programme</div>
+      <div class="chip" onclick="ask('discount dependency promotion tools')" id="ui-chip-discounts">Discounts</div>
+      <div class="chip b" onclick="ask('what should I do this week to improve')" id="ui-chip-week">&#9889; This week</div>
+      <div class="chip b" onclick="ask('give me a 1 year plan to improve stats')" id="ui-chip-1yr">&#128197; 1-year plan</div>
+      <div class="chip b" onclick="ask('forecast next 5 months june october')" id="ui-chip-forecast">&#128200; Forecast</div>
+      <div class="chip b" onclick="ask('3 year strategic roadmap 2026 2027 2028')" id="ui-chip-3yr">3-year plan</div>
+      <div class="chip a" onclick="ask('top priority actions right now urgent')" id="ui-chip-prio">Priorities</div>
+      <div class="chip a" onclick="ask('all improvement plans overview')" id="ui-chip-improv">Improvements</div>
+      <div class="chip" onclick="ask('2025 launch history black friday december')" id="ui-chip-launch">2025 launch</div>
+      <div class="chip g" onclick="ask('what data reports do you have loaded')" id="ui-chip-data">What data?</div>
+      <div class="home-btn" onclick="goHome()" id="ui-home">&#8592; Home</div>
+    </div>
+    <div id="msgs"></div>
+    <div class="cinp">
+      <textarea id="cq" placeholder="Ask anything&#8230;"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"
+        oninput="this.style.height='40px';this.style.height=Math.min(this.scrollHeight,110)+'px'"></textarea>
+      <button class="csend" onclick="send()">&#10148;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+
+const fe=n=>'€'+(+n).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fn=n=>(+n).toLocaleString('de-DE');
+const pct=(v,a=true)=>v>=0?`<span class="up">${a?'▲':''}${Math.abs(v).toFixed(2)}%</span>`:`<span class="dn">${a?'▼':''}${Math.abs(v).toFixed(2)}%</span>`;
+const bdg=(c,t)=>`<span class="bdg ${c}">${t}</span>`;
+const ul=a=>`<ul>${a.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+const ol=a=>`<ol>${a.map(i=>`<li>${i}</li>`).join('')}</ol>`;
+const tbl=(h,r)=>`<table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${r.map(row=>`<tr>${row.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</table>`;
+
+function answer(raw){
+  const q=raw.toLowerCase().replace(/[?!.,]/g,'').trim();
+
+  // ROUTING
+  if(/what.*(data|report|have|loaded)|available.*data/.test(q)) return topic_whatdata();
+  if(/dashboard|alert|urgent|out.of.stock|oos|29.*down|pending.return|shop.health/.test(q)) return topic_dashboard();
+  if(/overall|health.*check|how.*doing|shop.*perform|everything/.test(q)) return topic_overall();
+  if(/gmv.max.*(perform|all|campaign|overview|stat|result|how|roi)|all.*gmv.max|shop.*ads/.test(q)) return topic_gmvmax();
+  if(/transaction.*anal|creator.*attrib|commission.*total|8741|programme.*history|affiliate.*history|full.*programme|149.*059|1705|daily.*creator/.test(q)) return topic_transaction_analysis();
+  if(/2025|launch|nov.*2025|dec.*2025|black.friday|history|when.*launch|first.*days|year.on.year|yoy/.test(q)) return topic_2025_history();
+  if(/full.year.*gmv.max|gmv.max.*full.year|gmv.max.*history|all.*campaign.*year|annual.*gmv.max|top.*creator.*gmv.max|creator.*gmv.max.*year/.test(q)) return topic_gmvmax_fullyear();
+  if(/product.*(catalogue|catalog|list|sku|stock|inventory|all.*product)|oos.*list|stock.*status|which.*oos|which.*out.of.stock/.test(q)) return topic_product_catalogue();
+  if(/post.*overview|video.*volume|creator.*chart|1.33.*million|1333|videos.*with.*link|content.*library|compoun/.test(q)) return topic_posts_overview();
+  if(/ads.manager|full.year.*ads|total.*spend.*year|296|1.93|1.9.*million|ad.*overview|philips.*germany.*ad/.test(q)) return topic_ads_overview();
+  if(/live.*gmv.max|gmv.max.*live|live.*ads|live.*campaign.*max/.test(q)) return topic_live_gmvmax();
+  if(/best.*creative|top.*creative|top.*video.*roi|best.*video.*roi|creative.*roi|dorian|dorianlebt/.test(q)) return topic_best_creatives();
+  if(/promo.*tool|discount.*depend|promotion.*tool|88.*percent|voucher.*depend|how.*much.*discount/.test(q)) return topic_promo_tools();
+  if(/all.*improv|improv.*(all|overview|plan)|show.*improv/.test(q)) return topic_all_improvements();
+  if(/priorit|right now|what.*first|most.*urgent|top.*action/.test(q)) return topic_priority();
+  if(/3.year|three.year|2027|2028|long.term|strategic.*plan/.test(q)) return topic_three_year();
+  if(/forecast.*(jun|oct|all|scen|overview)|jun.*oct|5.month.*forecast/.test(q)) return topic_forecast();
+  if(/monthly.*forecast|month.*by.*month|each.*month/.test(q)) return topic_forecast_monthly();
+  if(/q4|october|september|autumn|back.to.school/.test(q)) return topic_q4();
+  if(/summer.*(sale|pred|forecast)|what.*summer/.test(q)) return topic_summer();
+  if(/august|slow.*month/.test(q)) return topic_august();
+  if(/gmv.*(summar|jan|full.*year|overview|total|jan.*may)|full.*year.*gmv|jan.*may.*gmv/.test(q)) return topic_gmv_fullyear();
+  if(/gmv.*(summar|overview|total|channel)|channel.*breakdown/.test(q)) return topic_gmv_summary();
+  if(/campaign.*(rank|list|all|perform|best)|all.*campaign|show.*campaign/.test(q)) return topic_campaigns();
+  if(/live.*(perform|stat|trend|daily|data)|daily.*live|stream.*trend/.test(q)) return topic_live();
+  if(/video.*(perform|stat|trend|daily|data|gpm)|daily.*video|gpm/.test(q)) return topic_video();
+  if(/top.*creator|creator.*(top|rank|best|perform|anal|week)|who.*creator/.test(q)) return topic_top_creators();
+  if(/affiliate.*(core|stat|summar|metric)|core.*stat.*affiliate/.test(q)) return topic_affiliate_stats();
+  if(/outreach|acceptance.*rate|creator.*invitation/.test(q)) return topic_outreach();
+  if(/sample.*(roi|return|perform|seed)|seed.*roi/.test(q)) return topic_sample_roi();
+  if(/refund|cancel|return.*rate|how.*return/.test(q)) return topic_refunds();
+  if(/product.*card|card.*(conver|funnel|rate|traffic)|funnel/.test(q)) return topic_product_card();
+  if(/period.*(compar|vs|change)|vs.*prior|prior.*period|how.*compar/.test(q)) return topic_period_compare();
+  if(/peak|best.*day|highest.*day|top.*day|most.*revenue/.test(q)) return topic_peak_days();
+  if(/aov|average.*order|order.*value|basket/.test(q)) return topic_aov();
+  if(/misstestet|reapez|danbor|jonas.*james|deal_detektiv|emmasbeauty|dorianlebt/.test(q)) return topic_specific_creator(q);
+  if(/fix.*refund|scale.*live|expand.*creator|bundle|fix.*creator|improve.*outreach/.test(q)) return topic_improvements_specific(q);
+  return smartFallback(q);
+}
+
+function topic_whatdata(){return `<p><strong>16 reports fully loaded — including GMV Max for the first time:</strong></p>`+ul(['<strong>Shop Analytics (Full year)</strong> — Jan 1–May 26, 2026: daily GMV, orders, LIVE, video, product card, refunds, impressions','<strong>GMV Max / Shop Ads</strong> — May 19–25: 7 campaigns, creative-level spend, revenue, ROI, top videos','<strong>Marketing Analytics (Promotion tools)</strong> — May 19–25: €49,590 GMV, 88.6% of shop GMV uses promotions','<strong>Campaigns 2026</strong> — 6 Mega campaigns with GMV, CTOR, impressions, AOV','<strong>Live Performance Core Stats</strong> — daily Apr 27–May 24','<strong>Video Performance Core Stats</strong> — daily Apr 27–May 24','<strong>Creator List (May 18–24)</strong> — 8,241 creators with GMV, refunds, commission','<strong>Transaction Analysis (May 18–24)</strong> — per-creator breakdown','<strong>Affiliate Core Stats (May 11–24)</strong> — total affiliate GMV, refunds, commission','<strong>Sample Analysis (May 16–22)</strong> — sample ROI tracking','<strong>Outreach Analysis (May 3–9)</strong> — 544 contacts, acceptance rates','<strong>Product Card Traffic (May 18–24)</strong> — full funnel','<strong>Shop Analytics (Period)</strong> — Apr 1–May 25 vs Feb 5–Mar 31','<strong>Live Dashboard Snapshot</strong> — May 24: GMV ↓29%, 32 OOS, 485 returns','<strong>5-month forecast</strong> — Jun–Oct 2026','<strong>6 improvement plans</strong> — prioritised']);}
+
+function topic_dashboard(){
+  return `<p>${bdg('b-red','🚨 urgent')} <strong>Dashboard — last 7 days (May 24):</strong></p>`+
+  tbl(['Metric','Value','Change'],[
+    ['GMV','<span class="num">€92,729</span>','<span class="dn">▼29.42%</span>'],
+    ['Customers','<span class="num">2,603</span>','<span class="dn">▼34.1%</span>'],
+    ['SKU orders','<span class="num">2,733</span>','<span class="dn">▼33.08%</span>'],
+    ['Visitors','<span class="num">230,540</span>','<span class="dn">▼11.68%</span>'],
+    ['Shop Health','<span class="num">640</span>','Healthy'],
+  ])+
+  tbl(['To-do item','Count','Status'],[
+    ['Orders to ship','636','Normal'],
+    ['Pending returns','485','<span class="dn">⚠ 4 urgent</span>'],
+    ['Unread messages','66','Normal'],
+    ['Low stock SKUs','8','<span class="wrn">Monitor</span>'],
+    ['Out of stock SKUs','32','<span class="dn">🚨 Critical — fix today</span>'],
+    ['Negative reviews','85','<span class="wrn">Review needed</span>'],
+  ])+
+  `<p><strong>Root causes of GMV ↓29%:</strong></p>`+ul([
+    '<strong>32 SKUs out of stock</strong> — revenue lost every day, especially during Summer Sale launch',
+    'Post-campaign dip: April Deals ended May 7, Spring Escape ended May 18 — organic lull normal',
+    'LIVE revenue collapsed post Apr 28–30 peak — May generating near-zero LIVE GMV most days',
+    'Beauty Set GMV Max campaign spent €77.72 with €0 revenue — broken campaign needs fixing'
+  ])+
+  `<p><strong>Immediate actions:</strong></p>`+ol(['Replenish 32 OOS SKUs — highest priority during Summer Sale','Resolve 4 escalated returns today','Fix Beauty Set GMV Max campaign (€77.72 spent, €0 revenue)','Start structured LIVE selling sessions during Summer Sale']);}
+
+function topic_overall(){
+  return `<p><strong>Shop health — full picture (Jan–May 2026):</strong></p>`+
+  `<p><span class="up">✓ What\'s working:</span></p>`+ul([
+    `Full-year GMV Jan–May: <span class="num">€1,714,995.80</span> — strong base for a new channel`,
+    `LIVE GMV ↑187.79% vs prior year — from near-zero to real revenue`,
+    `Video GMV ↑548.39% — creator engine is scaling`,
+    `Product card GMV ↑402.98%`,
+    `GMV Max running at <span class="num">~9.5x ROI</span> on top campaign (OneBlade Intimate)`,
+    `DorianLebt video: <span class="num">114x ROI</span> on GMV Max — exceptional creative`,
+    `deal_detektivin: 4% refund rate + 112x sample ROI — model creator`
+  ])+
+  `<p><span class="dn">✗ What needs fixing:</span></p>`+ul([
+    `<strong>32 SKUs out of stock</strong> 🚨 — direct daily revenue loss`,
+    `Refunds: €143,163 refunded Jan–May, rate ↑398.70% — growing problem`,
+    `reapez: 79% refund rate on GMV Max — must pause`,
+    `Beauty Set GMV Max: €77.72 spend, €0 revenue — broken`,
+    `LIVE collapsed post Apr 28–30 — most streams €0`,
+    `Discount dependency: 88.6% of GMV requires a promotion to convert`,
+    `485 pending returns, 85 negative reviews — ops pressure`
+  ])+
+  `<p><strong>Summary:</strong> The fundamental growth story is strong (video, creator, LIVE all scaling fast). The main risks are margin erosion from refunds + discount dependency, and the ops backlog. Fix stock and refunds first, then scale GMV Max on winning creatives.</p>`;}
+
+function topic_posts_overview(){
+  return '<p><strong>Posts & creator content — May 2025 to May 26, 2026:</strong></p>'+
+  tbl(['Metric','Value','Note'],[
+    ['Gross revenue from posts (all time)','<span class="num">€1,333,025.96</span>','May 2025–May 2026'],
+    ['Data available from','Aug 12, 2025','Earlier data not tracked'],
+    ['Videos with links trend','Steeply rising','See chart — near-zero to 27K+ videos'],
+    ['Revenue trend','Volatile but growing','Peaks align with campaigns'],
+  ])+
+  '<p><strong>What the chart reveals — 3 key insights:</strong></p>'+ul([
+    '<strong>Creator video volume is exploding.</strong> The yellow line (videos with links) goes from near-zero in Aug 2025 to over 27,000 by late April 2026. This is your creator engine scaling rapidly — each new video is a permanent asset driving long-tail revenue.',
+    '<strong>Revenue spikes perfectly align with campaigns.</strong> Every big spike in the green line (GMV) matches a Mega campaign window — Nov/Dec 2025, Jan 2026 (Winter Sale), Mar–Apr 2026 (Spring Sale), Apr–May 2026 (April Deals). Between campaigns, revenue drops to baseline. This confirms campaigns are the primary activation lever.',
+    '<strong>Baseline revenue between campaigns is growing.</strong> The floor after each campaign is higher than the previous floor. Nov 2025 baseline ~€2K/day → Feb 2026 baseline ~€5K/day → May 2026 baseline ~€8K/day. The content library compounds over time even without active campaigns.'
+  ])+
+  '<p>'+bdg('b-blue','strategic insight')+' You now have 27,000+ linked videos in market. These videos keep generating revenue long after posting. Every creator you onboard and every video they post adds to a permanent, compounding asset base. This is the core long-term moat of TikTok Shop.</p>'+
+  '<p><strong>What this means for strategy:</strong></p>'+ul([
+    'Creator volume growth is your most important leading indicator — more videos = higher baseline GMV',
+    'Campaign timing should be concentrated (not spread out) — the spikes are sharp and short',
+    'The gap between campaigns (troughs) is where LIVE selling and GMV Max should fill the void',
+    'By end of 2026 you could have 50,000+ videos in market if current trajectory holds'
+  ]);
+}
+
+function topic_transaction_analysis(){
+  return '<p><strong>Affiliate transaction analysis — Aug 29, 2025 to May 25, 2026 (full programme history):</strong></p>'+
+  tbl(['Metric','Value','Insight'],[
+    ['Creator-attributed GMV','<span class="num">€1,705,441</span>','~99.5% of total shop GMV came via creators'],
+    ['Creator-attributed items sold','<span class="num">57,443</span>','Nearly all items sold through creator content'],
+    ['Refunds (value)','<span class="num">€130,002</span>','<span class="dn">7.6% refund rate on creator GMV</span>'],
+    ['Items refunded','<span class="num">3,280</span>','5.7% of items returned'],
+    ['Estimated commission paid','<span class="num">€149,060</span>','8.74% commission rate on GMV'],
+    ['Total videos posted','<span class="num">21,317</span>','Permanent content library built'],
+    ['Total LIVE streams','<span class="num">2,624</span>','Avg ~9 streams/day across programme'],
+    ['Samples shipped','<span class="num">2,457</span>','Investment in creator pipeline'],
+    ['AOV (creator orders)','<span class="num">€30.33</span>','Slightly below shop average €30.98'],
+  ])+
+  '<p><strong>Daily averages — what a typical day looks like:</strong></p>'+
+  tbl(['Daily metric','Value','What it means'],[
+    ['Customers purchasing','<span class="num">208</span>','208 sales/day driven by creator content'],
+    ['Creators generating sales','<span class="num">42</span>','Only 42 of 8,241 creators sell on any given day'],
+    ['Creators posting content','<span class="num">51</span>','51 creators post per day on average'],
+    ['Videos generating sales','<span class="num">83</span>','83 videos drive at least 1 sale per day'],
+    ['LIVE streams with sales','<span class="num">2</span>','Only 2 revenue-generating streams per day on average'],
+    ['Products sold per day','<span class="num">6</span>','Only 6 unique SKUs sell on a typical day'],
+    ['Products in active collabs','<span class="num">24</span>','24 SKUs have active creator collaborations daily'],
+  ])+
+  '<p>'+bdg('b-red','critical finding')+' <strong>Only 42 out of 8,241 creators generate a sale on any given day</strong> — that is 0.5% activation rate. You have 8,199 dormant creators in your programme every single day. Even moving 1% more to active would mean 82 → 124 daily selling creators, roughly a <strong>50% GMV uplift</strong> from activation alone.</p>'+
+  '<p>'+bdg('b-amber','key insight')+' <strong>Only 6 unique products sell per day</strong> but 24 are in active collaborations. This means 18 products have creator content that is not converting. Either the content is poor quality, the products are OOS, or they need GMV Max amplification to reach buyers.</p>'+
+  '<p><strong>Commission economics (full programme):</strong></p>'+ul([
+    'Total GMV: €1,705,441',
+    'Total commission: €149,060 = <strong>8.74% of GMV</strong>',
+    'Total refunds: €130,002 = <strong>7.6% of GMV</strong>',
+    'Net creator-attributed revenue after commission + refunds: <strong>€1,426,379</strong> (83.6% of creator GMV)',
+    'Every additional creator who activates costs ~8.74% in commission but brings full-price orders if brief quality is high'
+  ])+
+  '<p><strong>LIVE performance in context:</strong></p>'+ul([
+    '2,624 total LIVE streams over ~270 days = avg 9.7 streams/day across all creators',
+    'But only <strong>2 streams/day generate any sales</strong> — 79% of streams produce €0 in revenue',
+    'This confirms the finding from daily LIVE data: passive streaming without structured selling almost never converts',
+    'The 21% of streams that do convert are your template — understand what those sessions do differently'
+  ]);
+}
+
+function topic_2025_history(){
+  return '<p><strong>Shop history — Nov 26 to Dec 31, 2025 (launch period):</strong></p>'+
+  '<p>TikTok Shop Germany launched Nov 26, 2025. This is the full history of the first 36 days.</p>'+
+  tbl(['Period','GMV','Orders','LIVE GMV','Video GMV','Note'],[
+    ['Nov 26–30 (5 days)','<span class="num">€40,055</span>','1,112','<span class="num">€54,498</span>','<span class="num">€3,472</span>','Launch week — Black Friday'],
+    ['Dec 1–15','<span class="num">€61,840</span>','1,335','<span class="num">€67,466</span>','<span class="num">€4,721</span>','Post-launch dip then recovery'],
+    ['Dec 16–19','<span class="num">€39,939</span>','1,063','<span class="num">€50,527</span>','<span class="num">€1,221</span>','Pre-Christmas spike'],
+    ['Dec 20–31','<span class="num">€51,648</span>','2,103','<span class="num">€75,875</span>','<span class="num">€3,074</span>','Christmas & year-end'],
+    ['<strong>Total Dec 2025</strong>','<span class="num">€153,353</span>','4,501','<span class="num">€198,468</span>','<span class="num">€8,634</span>',''],
+    ['<strong>Total Nov 26–Dec 31</strong>','<span class="num">€193,408</span>','5,613','<span class="num">€252,966</span>','<span class="num">€12,106</span>','First 36 days'],
+  ])+
+  '<p><strong>Top days in the launch period:</strong></p>'+
+  tbl(['Date','GMV','Orders','AOV','Note'],[
+    ['Nov 28','<span class="num">€16,885</span>','475','€35.55','Black Friday peak — best launch day'],
+    ['Dec 17','<span class="num">€12,182</span>','328','€37.14','Pre-Christmas spike'],
+    ['Dec 18','<span class="num">€10,212</span>','247','€41.35',''],
+    ['Dec 19','<span class="num">€9,789</span>','247','€39.63',''],
+    ['Dec 23','<span class="num">€11,263</span>','323','€34.87','Christmas Eve-Eve'],
+    ['Dec 25','<span class="num">€9,639</span>','304','€31.71','Christmas Day'],
+    ['Dec 1','<span class="num">€13,162</span>','448','€29.38','Post-BF Monday surge'],
+  ])+
+  '<p>'+bdg('b-amber','key insight')+' <strong>LIVE GMV was the dominant channel in Nov–Dec 2025.</strong> LIVE GMV (€252,966) was actually <em>higher</em> than shop GMV (€193,408) in the launch period — meaning the co-funding/TikTok contribution boosted LIVE revenue above actual shop receipts. Video GMV was minimal (€12,106) because the creator programme had not yet scaled. This is the opposite of the current situation where video is 86% of GMV and LIVE is 7%.</p>'+
+  '<p><strong>Year-on-year growth (Jan–May):</strong></p>'+
+  tbl(['Metric','Jan–May 2026','Implied 2025 base','Growth'],[
+    ['GMV','<span class="num">€1,714,996</span>','<span class="num">~€293K</span>','<span class="up">↑485%</span>'],
+    ['Orders','<span class="num">55,353</span>','~8,723','<span class="up">↑535%</span>'],
+  ])+
+  '<p>The 2025 "base" for comparison was only Nov 26–Dec 31 (36 days at €193K). The shop literally did not exist before Nov 26, 2025. So the 485% YoY growth figure compares 5 months of 2026 against the very first weeks of launch — impressive growth but the comparison baseline is extremely low.</p>'+
+  '<p><strong>Seasonal pattern from 2025 launch:</strong></p>'+ul([
+    'Black Friday (Nov 28): best single day in first 36 days at €16,885',
+    'Dec 4 was the lowest day (€916, 21 orders) — post-BF Monday lull',
+    'Dec 17–19 strong pre-Christmas spike (~€10K/day)',
+    'Christmas Day (Dec 25) generated €9,639 — gift recipients buying',
+    'Dec 27–31 sharp decline as post-Christmas shopping drops',
+    '<strong>Implication for 2026:</strong> Black Friday (Nov 28) and Dec 17–23 are your two biggest seasonal opportunities — plan Mega campaigns around these dates now'
+  ]);
+}
+
+function topic_gmvmax_fullyear(){
+  return '<p><strong>GMV Max — full year May 2025 to May 2026:</strong></p>'+
+  '<p><strong>Total summary:</strong></p>'+
+  tbl(['Metric','Value'],[
+    ['Total ad spend','<span class="num">€278,219.86</span>'],
+    ['Total attributed revenue','<span class="num">€1,795,715.37</span>'],
+    ['Total orders','<span class="num">49,259</span>'],
+    ['Unique campaigns','<span class="num">13</span>'],
+    ['Total creative rows (videos + cards)','<span class="num">17,647</span>'],
+    ['Blended ROI','<span class="num" style="color:var(--green)">6.45x</span>'],
+  ])+
+  '<p><strong>Campaign totals — full year:</strong></p>'+
+  tbl(['Campaign','Spend','Revenue','Orders','ROI'],[
+    ['Facial Hair Remover 5000','<span class="num">€104,707</span>','<span class="num">€702,080</span>','21,615','<span class="num">6.71x</span>'],
+    ['OneBlade Intimate','<span class="num">€80,507</span>','<span class="num">€486,145</span>','12,699','<span class="num">6.04x</span>'],
+    ['OneBlade Intimate (Auto)','<span class="num">€42,990</span>','<span class="num">€285,628</span>','8,281','<span class="num">6.64x</span>'],
+    ['OneBlade Face 360','<span class="num">€26,639</span>','<span class="num">€178,975</span>','4,462','<span class="num">6.72x</span>'],
+    ['Lumea 8000/9000','<span class="num">€5,361</span>','<span class="num">€81,791</span>','225','<span class="num" style="color:var(--green)">15.26x</span>'],
+    ['Bottle&Trimmer','<span class="num">€5,513</span>','<span class="num">€18,687</span>','960','<span class="num">3.39x</span>'],
+    ['Test 1 all products','<span class="num">€7,269</span>','<span class="num">€17,424</span>','539','<span class="dn">2.40x</span>'],
+    ['EU April Promotion','<span class="num">€3,970</span>','<span class="num">€21,076</span>','427','<span class="num">5.31x</span>'],
+    ['Beauty Set 15.04.26','<span class="num">€303</span>','<span class="num">€357</span>','2','<span class="dn">1.18x 🚨</span>'],
+  ])+
+  '<p><strong>Product card vs video (creative type):</strong></p>'+
+  tbl(['Type','Spend','Revenue','Orders','ROI'],[
+    ['Product card','<span class="num">€22,128</span>','<span class="num">€462,968</span>','11,889','<span class="num" style="color:var(--green)">20.92x</span>'],
+    ['Video','<span class="num">€256,092</span>','<span class="num">€1,332,747</span>','37,370','<span class="num">5.20x</span>'],
+  ])+
+  '<p>'+bdg('b-blue','insight')+' Product cards generate <strong>20.92x ROI</strong> vs 5.20x for videos — 4× more efficient per euro spent. Cards are systematically underinvested.</p>'+
+  '<p><strong>Top creators by full-year GMV Max revenue:</strong></p>'+
+  tbl(['Creator','Spend','Revenue','ROI','Note'],[
+    ['Kristina ☄️','<span class="num">€26,997</span>','<span class="num">€184,108</span>','<span class="num">6.82x</span>','#1 creator by revenue — reliable'],
+    ['jonas.jamess','<span class="num">€10,153</span>','<span class="num">€90,359</span>','<span class="num">8.90x</span>','#2 — good ROI, high refund rate to watch'],
+    ['TrendVault','<span class="num">€16,922</span>','<span class="num">€82,847</span>','<span class="num">4.90x</span>','#3 by revenue'],
+    ['Stärke Deals','<span class="num">€278</span>','<span class="num">€39,609</span>','<span class="num" style="color:var(--green)">142x</span>','🏆 Highest ROI creator full year — massively underinvested'],
+    ['produktguru','<span class="num">€24,471</span>','<span class="num">€69,741</span>','<span class="dn">2.85x</span>','High spend, poor ROI'],
+    ['Reapez','<span class="num">€25,616</span>','<span class="num">€51,740</span>','<span class="dn">2.02x 🚨</span>','Worst ROI + 79% refunds — across 11 campaigns'],
+    ['DorianLebt','<span class="num">€7</span>','<span class="num">€765</span>','<span class="num" style="color:var(--green)">114x</span>','New entry — best recent creative'],
+    ['fundkugel_UGC','<span class="num">€4,619</span>','<span class="num">€29,119</span>','<span class="num">6.30x</span>','Consistent performer'],
+  ])+
+  '<p>'+bdg('b-red','🚨 reapez damage')+' Reapez spent <strong>€25,616</strong> across <strong>11 campaigns</strong> generating only €51,740 at 2.02x ROI. At a proper 7x ROI target, that same €25,616 should have generated ~€179,000. The gap = <strong>~€127,000 in lost revenue</strong> from one creator over the full year. Plus refund costs on top.</p>';
+}
+
+function topic_product_catalogue(){
+  const oos=[
+    'OneBlade Intimate unisex (QP1924)',
+    'Sonicare 3100 Wiederaufladbare Zahnbürste',
+    'OneBlade Haarfrei Set',
+    'Body & Balls Körperrasierer (x2 variants)',
+    'OneBlade Duo Set (also Inactive)',
+    'OneBlade Face 360 Shaver',
+    'Facial Hair Remover Series (page 3)',
+  ];
+  const low=[
+    'Lumea Series 8000 (Low stock — also in GMV Max at 15.16x ROI 🚨)',
+    'Philips Avent Schnuller Ultra',
+    'Sonicare Series 7100',
+  ];
+  const live=[
+    'OneBlade Intimate unisex — €277 today, 10 items, 9 orders (top seller)',
+    'Sonicare 3100 — €35, 1 order',
+    'Nose & Ear Trimmer 3000 — €18, 1 order',
+    'Sonicare S2 Sensitive brush heads — 1 item, €0 (pricing issue?)',
+    'Lumea 9000 — In stock, €0 today',
+    'Lumea 8000 — Low stock, €0 today',
+    'i9000 Prestige Electric Shaver — In stock, €0',
+    'Sonicare 6100 — In stock, €0',
+    'Sonicare kabelloser — In stock, €0',
+    'Skin LED Beauty Set 9000 — In stock, €0',
+    'Hair Dryer 8000 — In stock, €0',
+    'Sonicare 5500 — In stock, €0',
+    'Head Shaver Pro 5000 — In stock, €0',
+    'OneBlade 1x SkinProtect — In stock, €0',
+    'OneBlade Ersatzklingen — In stock, €0',
+    'Avent Premium Connected — In stock, €0',
+    'Avent Natural Response — In stock, €0',
+    'Philips Lumea x Intimate Seidipil — In stock, €0',
+    'Sonicare Premium Plaque Defence — In stock, €0',
+  ];
+  return '<p><strong>Product catalogue — stock status (today, May 26):</strong></p>'+
+  '<p>'+bdg('b-red','🚨 out of stock')+' <strong>'+oos.length+' SKUs confirmed OOS:</strong></p>'+
+  ul(oos)+
+  '<p>'+bdg('b-amber','⚠ low stock')+' <strong>3 SKUs on low stock — order now:</strong></p>'+
+  ul(low)+
+  '<p>'+bdg('b-green','live & selling')+' <strong>Active products today:</strong></p>'+
+  ul(live)+
+  '<p><strong>Key findings:</strong></p>'+ul([
+    '<strong>OneBlade Intimate is the only product generating meaningful GMV today</strong> — €277 with 9 orders. Everything else is €0 or OOS.',
+    '<strong>Lumea 8000 is on low stock AND is your highest-ROI GMV Max campaign (15.16x)</strong> — this is the most urgent restocking priority. When it runs out, that campaign stops delivering.',
+    '<strong>Body & Balls has 2 OOS variants</strong> — both listed as Live but cannot sell. This is likely a significant revenue gap given the product appeal in the TikTok audience.',
+    '<strong>OneBlade Face 360 is OOS</strong> — this campaign is already "not delivering" in GMV Max due to missing asset, and now confirmed OOS too.',
+    '<strong>~19 products are Live and In stock but generating €0 today</strong> — these need creator content and GMV Max campaigns. Many premium products (i9000 Prestige, Hair Dryer 8000, Skin LED Beauty Set) have no creator presence.',
+    '<strong>Sonicare S2 brush heads: 1 item sold, €0 GMV</strong> — possible pricing error or the order was cancelled/refunded immediately. Check this SKU.'
+  ])+
+  '<p>'+bdg('b-red','immediate action')+' Restock priority order: <strong>1) Lumea 8000</strong> (15x ROI GMV Max at risk) → <strong>2) OneBlade Intimate</strong> (top seller, OOS today) → <strong>3) Body & Balls</strong> (2 variants) → <strong>4) OneBlade Face 360</strong> → <strong>5) Sonicare 3100</strong>.</p>';
+}
+
+function topic_ads_overview(){
+  return '<p><strong>TikTok Ads Manager — Philips_Germany_Ad (May 26 2025 – May 26 2026, full year):</strong></p>'+
+  tbl(['Metric','Value'],[
+    ['Total ad spend','<span class="num">€296,913.22</span>'],
+    ['SKU orders attributed to ads','<span class="num">52,624</span>'],
+    ['Gross revenue attributed','<span class="num">€1,934,499.02</span>'],
+    ['Cost per order','<span class="num">€5.64</span>'],
+    ['Blended ROI (all campaigns, full year)','<span class="num" style="color:var(--green)">6.52x</span>'],
+  ])+
+  '<p><strong>What this tells us:</strong></p>'+ul([
+    'Ads drove <strong>~95% of all orders</strong> — 52,624 ad-attributed orders vs 55,353 total shop orders',
+    'Effective ad cost as % of revenue: <strong>15.3%</strong> (very efficient for premium personal care)',
+    'Cost per order: €5.64 — highly efficient',
+    'Ad spend timeline: near-zero May–Oct 2025, ramped Nov 2025, peaked Apr 2026 (Spring Sale), now declining May 2026',
+    'Total acquisition cost stack: ads 15.3% + affiliate commission ~8.3% + discounts ~27.8% = <span class="wrn">~51% of revenue</span> before COGS'
+  ])+
+  '<p>'+bdg('b-amber','margin alert')+' Roughly <strong>half of every euro earned goes to acquisition</strong>. This is why SKU-level COGS data is critical — profit margin could be anywhere from very healthy to very thin depending on product costs.</p>';
+}
+
+function topic_gmvmax(){
+  return `<p><strong>GMV Max / Shop Ads — May 19–25, 2026:</strong></p>`+
+  tbl(['Campaign','Status','Spend','Orders','Revenue','ROI','Note'],[
+    ['OneBlade Intimate (Auto)','<span class="up">Active</span>','<span class="num">€2,558.63</span>','769','<span class="num">€24,296.52</span>','<span class="num">9.50x</span>','Top campaign'],
+    ['EU April Promotion','<span class="up">Active</span>','<span class="num">€779.11</span>','106','<span class="num">€5,430.27</span>','<span class="num">6.97x</span>',''],
+    ['Facial Hair Remover 5000','<span class="dn">Not delivering</span>','<span class="num">€754.57</span>','284','<span class="num">€5,797.23</span>','<span class="num">7.68x</span>','OOS — fix stock'],
+    ['Lumea 8000/9000','<span class="up">Active</span>','<span class="num">€348.18</span>','14','<span class="num">€5,277.00</span>','<span class="num" style="color:var(--green)">15.16x</span>','Highest ROI'],
+    ['OneBlade Face 360','<span class="dn">Not delivering</span>','<span class="num">€298.56</span>','54','<span class="num">€2,054.11</span>','<span class="num">6.88x</span>','Asset missing'],
+    ['Bottle&Trimmer','<span class="up">Active</span>','<span class="num">€153.03</span>','71','<span class="num">€1,404.04</span>','<span class="num">9.17x</span>',''],
+    ['Beauty Set 15.04.26','<span class="up">Active</span>','<span class="num">€77.72</span>','0','<span class="num">€0</span>','<span class="dn">0x 🚨</span>','Broken — fix or pause'],
+  ])+
+  `<p><strong>Total active spend:</strong> <span class="num">~€3,969</span> · <strong>Total attributed revenue:</strong> <span class="num">~€44,259</span> · <strong>Blended ROI: <span class="num" style="color:var(--green)">~11.1x</span></strong></p>`+
+  `<p><strong>Key actions:</strong></p>`+ul([
+    '<strong>Lumea 8000/9000 at 15.16x ROI</strong> — highest efficiency, increase budget immediately',
+    '<strong>OneBlade Intimate at 9.5x</strong> — scale up, currently has €8K daily budget headroom',
+    '<strong>Facial Hair Remover 5000</strong> — not delivering because product is OOS. Fix stock to reactivate',
+    '<strong>OneBlade Face 360</strong> — not delivering due to missing asset. Upload new creative',
+    '<strong>Beauty Set</strong> — €77.72 spent with zero revenue. Pause immediately and audit listing'
+  ]);}
+
+function topic_live_gmvmax(){
+  return '<p><strong>LIVE GMV Max campaigns — all time:</strong></p>'+
+  tbl(['Campaign','Status','Total spend','Total revenue','ROI','Orders','LIVE views','Issue'],[
+    ['Campaign 1 (Oct 31, 2025)','<span class="dn">🔴 Not delivering</span>','<span class="num">€16,213.72</span>','<span class="num">€137,696.90</span>','<span class="num" style="color:var(--green)">7.52x</span>','3,333','1,436,379','Asset not available — fix urgently'],
+    ['Campaign 2 (Oct 22, 2025)','⚫ Inactive','<span class="num">€306.90</span>','<span class="num">€378.90</span>','<span class="dn">1.23x</span>','11','23,775','Low ROI — target was set too low at 1.0'],
+    ['Campaign 3 (Oct 15, 2025)','⚫ Inactive','<span class="num">€23.84</span>','<span class="num">€159.99</span>','<span class="num">6.71x</span>','4','3,036','Minimal spend — early test'],
+  ])+
+  '<p>'+bdg('b-red','🚨 urgent')+' <strong>Campaign 1 is your biggest missed opportunity right now.</strong> It has proven 7.52x ROI across €16K spend and 1.4M LIVE views — but is not delivering because the linked LIVE asset is unavailable. This likely means the TikTok LIVE account lost its connection. Fix this and you reactivate a €1,000/day budget with proven performance.</p>'+
+  '<p><strong>What to do:</strong></p>'+ol([
+    'Go to LIVE GMV Max → Campaign 1 → check which TikTok account is linked (Philips Germany ID: 7517310666145285142)',
+    'Reconnect the LIVE asset — this may mean re-linking the account or uploading a new LIVE video',
+    'Once active, this campaign at 7.52x ROI on €1,000/day budget = potentially <strong>€7,520/day revenue</strong>',
+    'Campaign 2 had 1.23x ROI because target ROI was set at 1.0 — far too low. If reactivating, set target ROI to 6.0+',
+    'Campaign 3 at 6.71x ROI could be scaled up with more budget'
+  ]);
+}
+function topic_best_creatives(){
+  return `<p><strong>Top GMV Max creatives by ROI — May 19–25:</strong></p>`+
+  tbl(['Creator','Campaign','Cost','Revenue','ROI','Note'],[
+    ['DorianLebt','OneBlade Intimate','<span class="num">€6.70</span>','<span class="num">€764.87</span>','<span class="num" style="color:var(--green)">114x</span>','Best video in portfolio'],
+    ['fundkugel_UGC','OneBlade Intimate','<span class="num">€0.96</span>','<span class="num">€480.13</span>','<span class="num" style="color:var(--green)">500x</span>','Tiny spend, huge return'],
+    ['Produkt.bruder','Bottle&Trimmer','<span class="num">€31.85</span>','<span class="num">€605.32</span>','<span class="num" style="color:var(--green)">19x</span>','Reliable performer'],
+    ['EU April Promo (card)','EU April Promo','<span class="num">€86.60</span>','<span class="num">€2,034.40</span>','<span class="num">23.5x</span>','Product card top ROI'],
+    ['Lumea (card)','Lumea 8000/9000','<span class="num">€124.61</span>','<span class="num">€1,746.55</span>','<span class="num">14x</span>',''],
+    ['jonas.jamess','OneBlade Intimate','<span class="num">€108.99</span>','<span class="num">€764.87</span>','<span class="num">7.0x</span>','High volume but average ROI'],
+    ['Reapez','EU April Promo','<span class="num">€175.06</span>','<span class="num">€356.02</span>','<span class="dn">2.0x 🚨</span>','Lowest ROI + 79% refund rate'],
+  ])+
+  `<p><strong>Standout insight:</strong> DorianLebt\'s video "Schau bis zum Ende 😳" cost €6.70 and generated €764.87 — a <strong>114x return</strong>. This is your best-performing creative ever. Brief this creator for more content immediately. fundkugel_UGC (500x ROI) and Produkt.bruder (19x) are also exceptional. Reapez at 2x ROI plus 79% refund rate should be removed from all campaigns.</p>`;}
+
+function topic_promo_tools(){
+  return `<p><strong>Promotion tools — May 19–25, 2026:</strong></p>`+
+  tbl(['Metric','Value','vs prior period'],[
+    ['GMV via promotions','<span class="num">€49,589.93</span>',pct(6.58)],
+    ['% of shop GMV','<span class="num">88.62%</span>','Consistent'],
+    ['Orders via promotions','<span class="num">1,365</span>',pct(10.71)],
+    ['AOV via promotions','<span class="num">€36.33</span>',pct(-3.74)],
+    ['Total discount given','<span class="num">€13,794.69</span>',pct(2.65)],
+  ])+
+  `<p><span class="wrn">⚠ Key finding:</span> <strong>88.6% of GMV requires a discount or promotion to convert.</strong> This means almost no organic full-price purchasing. The business model is heavily dependent on promotion mechanics.</p>`+
+  `<p><strong>What this means:</strong></p>`+ul([
+    'Discount given: €13,794 on €49,590 GMV = effective margin cost of <strong>~27.8% of revenue</strong>',
+    'When you add affiliate commission (~8.3%) + discounts (~28%) = you\'re giving away ~36% of revenue before other costs',
+    'Bundling strategy could lift AOV and reduce per-unit discount pressure',
+    'Some discount dependency is normal in TikTok Shop (Germany market standard) but 88.6% is high',
+    'Experiment with reducing discount on top-converting products to test price elasticity'
+  ]);}
+
+function topic_gmv_fullyear(){
+  return `<p><strong>Full year GMV — Jan 1 to May 26, 2026:</strong></p>`+
+  tbl(['Metric','Jan–May 2026','vs prior year'],[
+    ['Total GMV','<span class="num">€1,714,995.80</span>',pct(485.33)],
+    ['GMV with co-funding','<span class="num">€2,368,584.91</span>',pct(508.92)],
+    ['Orders','<span class="num">55,353</span>',pct(532.24)],
+    ['Customers','<span class="num">54,093</span>',pct(531.26)],
+    ['Items sold','<span class="num">57,376</span>',pct(521.09)],
+    ['Items refunded','<span class="num">143,163</span>',pct(398.70)],
+    ['AOV','<span class="num">€30.98</span>',pct(-7.42)],
+    ['LIVE GMV','<span class="num">€118,712</span>',pct(187.79)],
+    ['Product card GMV','<span class="num">€124,563</span>',pct(402.98)],
+    ['Video GMV','<span class="num">€1,471,721</span>',pct(548.39)],
+    ['Product impressions','<span class="num">316,560,830</span>',pct(443.38)],
+    ['Product clicks','<span class="num">5,627,578</span>',pct(322.24)],
+  ])+
+  `<p><strong>Monthly breakdown:</strong></p>`+
+  tbl(['Month','Est. GMV','Key driver'],[
+    ['Jan 2026','<span class="num">~€45.8K</span>','Winter Sale only'],
+    ['Feb 2026','<span class="num">~€105.2K</span>','Valentine\'s Day + Feb Deals'],
+    ['Mar 2026','<span class="num">~€180K</span>','Spring Sale ramp'],
+    ['Apr 2026','<span class="num">~€325K</span>','Spring Sale peak + post-campaign'],
+    ['May 2026','<span class="num">~€208K</span>','April Deals tail + Spring Escape'],
+    ['May 26','<span class="num">€231</span>','Today (Summer Sale Day 1)'],
+  ])+
+  `<p>Full-year 2026 run rate based on Jan–May: <strong>€1.5–2M GMV</strong>. With Summer Sale and improvements applied, the base forecast is <strong>€1.05M</strong> additional in Jun–Oct, bringing full-year total to ~<strong>€2.7–2.8M</strong>.</p>`;}
+
+function topic_gmv_summary(){
+  return `<p><strong>Shop GMV — Apr 1–May 25, 2026 vs Feb 5–Mar 31:</strong></p>`+
+  tbl(['Metric','Value','vs prior period'],[
+    ['Total GMV','<span class="num">€626,961.72</span>',pct(-10.71)],
+    ['Orders','<span class="num">18,921</span>',pct(-16.45)],
+    ['Customers','<span class="num">18,482</span>',pct(-16.30)],
+    ['AOV','<span class="num">€33.14</span>',pct(6.86)],
+    ['LIVE GMV','<span class="num">€43,593.94</span>',pct(600.48)],
+    ['Product Card GMV','<span class="num">€42,782.64</span>',pct(-9.37)],
+    ['Video GMV','<span class="num">€540,585.14</span>',pct(-8.75)],
+    ['Refunds','<span class="num">€71,887.98</span>',pct(50.24)],
+  ]);}
+
+function topic_campaigns(){
+  const c=[
+    {n:'2026 Spring Sale',s:'Mar 24',e:'Apr 1',gmv:272849.71,orders:9289,ctor:1.34,aov:29.37},
+    {n:'April Deals For You',s:'Apr 25',e:'May 7',gmv:258170.79,orders:8033,ctor:1.41,aov:32.14},
+    {n:'Spring Escape',s:'May 13',e:'May 18',gmv:89531.10,orders:2736,ctor:1.10,aov:32.72},
+    {n:'February Deals',s:'Feb 26',e:'Mar 3',gmv:59641.40,orders:1705,ctor:0.89,aov:34.98},
+    {n:'Winter Sale 2026',s:'Jan 7',e:'Jan 11',gmv:45825.90,orders:1421,ctor:0.93,aov:32.25},
+    {n:"Valentine Day",s:'Feb 4',e:'Feb 6',gmv:45517.18,orders:1722,ctor:1.09,aov:26.43},
+  ];
+  return `<p><strong>2026 Mega campaigns ranked by GMV:</strong></p>`+
+  tbl(['Campaign','Period','GMV','Orders','CTOR','AOV'],
+    c.map(x=>[x.n,`${x.s}–${x.e}`,`<span class="num">${fe(x.gmv)}</span>`,fn(x.orders),`${x.ctor.toFixed(2)}%`,`€${x.aov}`])
+  )+`<p>Spring Sale + April Deals = <strong>84%</strong> of all campaign GMV. ${bdg('b-blue','live now')} Summer Sale: May 26–Jul 2.</p>`;}
+
+function topic_live(){
+  return `<p><strong>LIVE performance — Apr 27–May 24, 2026:</strong></p>`+
+  `<p><strong>Apr 27–30 (campaign peak — exceptional):</strong></p>`+
+  tbl(['Date','LIVE GMV','Streams','Views','CTOR'],[
+    ['Apr 27','<span class="num">€1,750</span>','19','81,309','1.60%'],
+    ['Apr 28','<span class="num">€6,443</span>','23','151,764','2.89%'],
+    ['Apr 29','<span class="num">€6,378</span>','21','159,808','3.29%'],
+    ['Apr 30','<span class="num">€7,816</span> ← best','19','133,127','5.17%'],
+  ])+
+  `<p><strong>May 1–24 (post-campaign collapse — most days €0):</strong></p>`+
+  tbl(['Period','LIVE GMV','Notes'],[
+    ['May 1–5','<span class="num">~€360</span>','Near-zero across 5 days'],
+    ['May 6','<span class="num">€1,268</span>','Brief spike'],
+    ['May 8','<span class="num">€2,033</span>','Single strong day'],
+    ['May 12','<span class="num">€497</span>','Minor'],
+    ['May 19–21','<span class="num">~€1,743</span>','Recovering slightly'],
+    ['May 22','<span class="num">€2,625</span>','Good — CTOR 3.83%'],
+    ['May 23–24','<span class="num">€0</span>','Zero both days'],
+  ])+
+  `<p>Apr 28–30 = ~€20K in 3 days. Rest of May combined = ~€7K. The gap is massive. Structured selling LIVE with campaign-linked deals is what drives revenue — passive streaming alone doesn\'t work.</p>`;}
+
+function topic_video(){
+  return `<p><strong>Video performance — Apr 27–May 24, 2026:</strong></p>`+
+  tbl(['Week','Avg daily GMV','Avg GPM','Avg CTOR'],[
+    ['Apr 27–30','<span class="num">€27,756</span>','€7.40','1.58%'],
+    ['May 1–7','<span class="num">€11,000</span>','€7.80','1.22%'],
+    ['May 8–14','<span class="num">€8,700</span>','€6.65','0.99%'],
+    ['May 15–21','<span class="num">€13,500</span>','€6.45','1.07%'],
+    ['May 22–24','<span class="num">€3,900</span>','€5.69','<span class="dn">0.51% ← dropping</span>'],
+  ])+ul([
+    'Video GMV peaked Apr 28 at €31,083 — Spring Sale campaign driving creator content',
+    'GPM (revenue per 1000 views) declining: €7.8 → €5.7 — lower conversion quality week on week',
+    'CTOR dropped from 1.6% in April to 0.37% on May 23–24 — post-campaign organic lull',
+    'Summer Sale (May 26+) should reverse this if LIVE + bundles activated'
+  ]);}
+
+function topic_top_creators(){
+  return `<p><strong>Top creators — May 18–24 (from 8,241 in programme):</strong></p>`+
+  tbl(['Creator','GMV','Orders','AOV','Refund rate','GMV Max ROI','Note'],[
+    ['misstestet','<span class="num">€15,509</span>','386','€40.18','<span class="wrn">9%</span>','—','#1 performer — 13.6K followers'],
+    ['danbor00','<span class="num">€2,207</span>','65','€33.95','<span class="dn">23% ⚠</span>','—','324K followers — audit content'],
+    ['jonas.jamess','<span class="num">€2,197</span>','73','€30.10','<span class="dn">28% ⚠</span>','7.0x on GMV Max','High spend, avg ROI'],
+    ['deal_detektivin','<span class="num">€2,018</span>','66','€30.58','<span class="up">4% ✓</span>','—','Model creator, 112x sample ROI'],
+    ['reapez','<span class="num">€1,811</span>','38','€47.65','<span class="dn">79% 🚨</span>','2.0x on GMV Max','Must pause all campaigns'],
+    ['emmasbeautyy1','<span class="num">€1,768</span>','9','<span class="up">€196 ✓</span>','<span class="up">0% ✓</span>','—','Highest AOV, 0 refunds'],
+    ['dorianlebt','<span class="num">€1,432</span>','47','€30.47','<span class="up">6% ✓</span>','<span class="up">114x</span>','Best GMV Max video ever'],
+    ['beautytalkmitanna','<span class="num">€1,392</span>','—','—','—','—','213K followers — untapped'],
+  ])+
+  `<p>Total cumulative affiliate GMV (all 8,241 creators): <strong>€5,472,781</strong></p>`;}
+
+function topic_affiliate_stats(){
+  return `<p><strong>Affiliate core stats — May 11–24, 2026:</strong></p>`+
+  tbl(['Metric','Value'],[
+    ['Affiliate GMV','<span class="num">€58,756.57</span>'],
+    ['Affiliate shoppable video GMV','<span class="num">€58,218.65</span> (99.1%)'],
+    ['Affiliate LIVE GMV','<span class="num">€0</span>'],
+    ['Items sold','<span class="num">1,735</span>'],
+    ['Commission paid','<span class="num">€4,841.13</span>'],
+    ['Active collaborations','<span class="num">1,223</span>'],
+    ['Videos posted','<span class="num">1,320</span>'],
+    ['Affiliate refunds','<span class="num">€14,616.30</span> (<span class="dn">24.9%</span>)'],
+  ])+`<p>Affiliate refund rate 24.9% is double the shop-wide rate — creator content is systematically misrepresenting products. Needs urgent creator briefing overhaul.</p>`;}
+
+function topic_outreach(){
+  return `<p><strong>Creator outreach — May 3–9, 2026:</strong></p>`+
+  tbl(['Metric','Result'],[
+    ['Creators contacted','544'],
+    ['Accepted','<span class="num">46</span> (8.5%)'],
+    ['No reply','<span class="num">401</span> (73.7%)'],
+    ['Dialogue opened','<span class="num">143</span> (26.3%)'],
+  ])+
+  `<p>8.5% is poor. TikTok Shop standard is 15–25%. How to fix:</p>`+ol([
+    'Personalise each message — reference creator\'s specific content style',
+    'Lead with social proof: "Our top creator earned €15K last week with 16 videos"',
+    'Include a sample offer in the first message — reduces creator risk',
+    'Highlight DorianLebt 114x GMV Max ROI as an example of the upside',
+    'Target: 20%+ acceptance = ~100 new creators/month from same volume'
+  ]);}
+
+function topic_sample_roi(){
+  return `<p><strong>Sample seeding ROI — May 16–22:</strong></p>`+
+  tbl(['Creator','Content GMV','Sample sent','ROI','Note'],[
+    ['deal_detektivin','<span class="num">€2,244</span>','1','<span class="num" style="color:var(--green)">112x</span>','Best ROI in programme'],
+    ['misstestet','<span class="num">€3,746</span>','0','—','Performing without samples'],
+    ['beautytalkmitanna','<span class="num">€2,225</span>','0','—','213K followers — send samples'],
+  ])+
+  `<p>Total samples shipped all time: <strong>719</strong>. deal_detektivin = 112x ROI on 1 sample. Increase to 100+ strategic samples/month. beautytalkmitanna with 213K followers has never received a sample — high priority.</p>`;}
+
+function topic_refunds(){
+  return `<p><strong>Refund analysis — full picture:</strong></p>`+
+  tbl(['Source','Refunded','Rate','Status'],[
+    ['Full year Jan–May 2026','<span class="num">€143,163</span>','~8.3% of GMV','<span class="dn">↑398% vs prior year</span>'],
+    ['Period Apr–May 25','<span class="num">€71,888</span>','11.5% of GMV','<span class="dn">↑50% vs prior period</span>'],
+    ['Affiliate May 11–24','<span class="num">€14,616</span>','24.9%','<span class="dn">🚨 critical</span>'],
+    ['reapez (May 18–24)','<span class="num">€1,426</span>','79%','<span class="dn">🚨 pause immediately</span>'],
+    ['jonas.jamess (May 18–24)','<span class="num">€611</span>','28%','<span class="dn">⚠ review</span>'],
+    ['deal_detektivin (May 18–24)','<span class="num">€88</span>','4%','<span class="up">✓ model</span>'],
+  ])+ol(['Pause reapez from ALL campaigns including GMV Max','Audit which SKUs reapez, jonas.jamess, danbor00 are promoting','Send updated product briefs to all active creators','Enable return reason tracking in Seller Center','Target: overall below 7%, affiliate below 12%']);}
+
+function topic_product_card(){
+  const pc=[
+    ['May 18','153,056','2,887','273','29','€910','2.14%','12.45%'],
+    ['May 19','116,728','2,452','231','22','€752','2.48%','9.69%'],
+    ['May 20','102,341','2,272','205','35','€925','2.57%','17.98%'],
+    ['May 21','73,742','1,551','126','15','€701','2.46%','14.29%'],
+    ['May 22','55,492','1,248','105','11','€276','2.60%','12.64%'],
+    ['May 23','60,093','1,024','82','12','€453','1.77%','10.61%'],
+    ['May 24','74,792','970','66','9','€416','1.46%','16.95%'],
+  ];
+  return `<p><strong>Product card funnel — May 18–24:</strong></p>`+
+  tbl(['Date','Views','Clicks','Cart','Orders','GMV','V→Click','Cart→Paid'],pc)+
+  `<p>Week: 636,244 views · €4,433 card GMV · €13,341 content GMV. <span class="wrn">⚠ Cart→paid declining 12.45%→8.53%</span>. View→click 2.2% vs 3–4% benchmark.</p>`;}
+
+function topic_period_compare(){
+  return `<p><strong>Period comparison: Apr 1–May 25 vs Feb 5–Mar 31:</strong></p>`+
+  tbl(['Metric','Current','vs prior'],[
+    ['GMV','<span class="num">€626,962</span>',pct(-10.71)],
+    ['Orders','<span class="num">18,921</span>',pct(-16.45)],
+    ['AOV','<span class="num">€33.14</span>',pct(6.86)],
+    ['LIVE GMV','<span class="num">€43,594</span>',pct(600.48)],
+    ['Impressions','<span class="num">104.3M</span>',pct(-18.80)],
+    ['Refunds','<span class="num">€71,888</span>',pct(50.24)],
+  ])+`<p><span class="up">✓</span> AOV +7%, LIVE +600%. <span class="dn">✗</span> GMV -11%, orders -16%, refunds +50%.</p>`;}
+
+function topic_peak_days(){
+  const days=[['Apr 28','€39,545','1,351','€29.27'],['Apr 29','€36,119','1,233','€29.29'],['Apr 30','€37,498','1,266','€29.62'],['Apr 26','€28,735','900','€31.93'],['Apr 27','€25,598','723','€35.41'],['May 17','€19,224','561','€34.27'],['May 16','€17,658','554','€31.87'],['May 7','€15,374','430','€35.75'],['May 6','€15,286','414','€36.92'],['May 15','€13,862','449','€30.87']];
+  return `<p><strong>Top 10 revenue days — Apr 1–May 25:</strong></p>`+tbl(['Date','GMV','Orders','AOV'],days)+`<p>Apr 28–30 = <strong>~€113K in 3 days</strong>. LIVE + campaign momentum combined = the template for Summer Sale.</p>`;}
+
+function topic_aov(){
+  return `<p><strong>AOV analysis:</strong></p>`+ul([
+    `Full year AOV: <span class="num">€30.98</span> ${pct(-7.42)} vs prior year`,
+    `Period AOV: <span class="num">€33.14</span> ${pct(6.86)} vs prior period (improving)`,
+    `emmasbeautyy1 AOV: <span class="num" style="color:var(--green)">€196.47</span> with 0% refunds — premium product positioning works`,
+    `GMV Max Lumea campaign: <span class="num">€24.87</span> cost per order — highest-value product`,
+  ])+`<p>${bdg('b-blue','improvement')} Bundles push AOV from €33 to €38–42. Every €1 lift = ~€55K additional annual GMV at current volume.</p>`;}
+
+function topic_three_year(){
+  return `<p><strong>3-year strategic roadmap — Philips Germany TikTok Shop</strong></p>`+
+  `<h3>2026 — Fix & Launch (current year)</h3>`+ul([
+    'Run rate: ~€1.5–2M full year GMV',
+    'Fix the 3 fires: OOS stock (32 SKUs), refunds (↑398%), LIVE activation',
+    'Scale GMV Max: Lumea at 15x ROI and OneBlade Intimate at 9.5x deserve more budget',
+    'DorianLebt video at 114x ROI — brief immediately for 5+ new videos',
+    'Summer Sale (May 26–Jul 2): base forecast €280–330K over campaign period',
+    'Full-year 2026 target: €2.7–2.8M (organic + Summer Sale)'
+  ])+
+  `<h3>2027 — Scale the Creator + Ads Engine</h3>`+ul([
+    'Target GMV: €3–5M (2–2.5× 2026)',
+    'Creator base: 77 → 300+ daily active. Fix outreach from 8.5% → 20%+ acceptance',
+    'GMV Max: scale top campaigns to €10K+/day spend at 8x+ ROI target',
+    'LIVE commerce: hire or contract a dedicated LIVE host. Target 1 structured LIVE/day minimum',
+    'Sampling: scale to 200 strategic samples/month (currently 719 total all-time)',
+    'AOV: €33 → €45+ through bundles and product sets',
+    'Discount dependency: reduce from 88.6% to under 70% through better product card CTR'
+  ])+
+  `<h3>2028 — Market Leadership</h3>`+ul([
+    'Target GMV: €6–10M',
+    'LIVE as primary channel: 30%+ of GMV (vs 6.9% today)',
+    'GMV Max at scale: €50K+/month spend across 10+ active campaigns',
+    'Creator ecosystem: top 50 creators get exclusive rates, early products, co-branded content',
+    'Product expansion: use TikTok data to push more SKUs — which categories have highest CTOR'
+  ])+
+  `<h3>Risks</h3>`+ul(['TikTok regulatory risk in EU','Refund rate compounding at scale','Creator concentration: misstestet = 26% of weekly GMV alone','Competition as Germany TikTok Shop matures'])+
+  `<p><strong>Summary:</strong> 2026 = fix foundation. 2027 = scale what works (GMV Max, creators, LIVE). 2028 = LIVE commerce dominance. Core advantage: Philips brand trust + creator authenticity = hard to replicate.</p>`;}
+
+function topic_forecast(){
+  return `<p><strong>5-month forecast — Jun–Oct 2026:</strong></p>`+
+  tbl(['Scenario','Total','Monthly avg','Basis'],[
+    ['Conservative','<span class="num">€780K</span>','<span class="num">€156K/mo</span>','No changes, current issues persist'],
+    [`<strong>Base (recommended)</strong>`,'<span class="num" style="color:#93c5fd">€1,050K</span>','<span class="num" style="color:#93c5fd">€210K/mo</span>','Improvements + GMV Max scaling'],
+    ['Optimistic','<span class="num" style="color:#6ee7b7">€1,320K</span>','<span class="num" style="color:#6ee7b7">€264K/mo</span>','All levers fire, LIVE doubles'],
+  ])+`<p>The €270K gap between conservative and base: fix OOS + refunds (€25–35K/mo) + scale GMV Max Lumea + OneBlade (€15–25K/mo) + LIVE (€15–25K/mo) + bundles (€15–20K/mo).</p>`;}
+
+function topic_forecast_monthly(){
+  return `<p><strong>Monthly forecast — base scenario:</strong></p>`+
+  tbl(['Month','Est. GMV','Key driver','LIVE target'],[
+    ['Jun 2026','<span class="num">€185K–210K</span>','Summer Sale peak (May 26–Jul 2)','€9K+'],
+    ['Jul 2026','<span class="num">€140K–165K</span>','Post-sale tail, EU summer dip','€7K'],
+    ['Aug 2026','<span class="num">€120K–145K</span>','Lowest — EU holidays','€6K'],
+    ['Sep 2026','<span class="num">€185K–210K</span>','Back-to-school Mega campaign','€10K'],
+    ['Oct 2026','<span class="num">€210K–260K</span>','Pre-holiday Q4 ramp','€14K'],
+    ['Nov 28 2026 (Black Friday)','<span class="num">€35K–50K single day</span>','BF 2025 was €16,885 — 2026 with scaled creator base could 2–3×','€5K+'],
+    ['Dec 17–23 2026','<span class="num">€80K–120K</span>','Pre-Christmas week — strongest seasonal pattern','€15K'],
+  ]);}
+
+function topic_q4(){
+  return `<p><strong>Q4 outlook — Sep & Oct 2026:</strong></p>`+
+  tbl(['Month','Est. GMV','Driver','LIVE target'],[
+    ['Sep 2026','<span class="num">€185K–210K</span>','Back-to-school Mega campaign','€10K'],
+    ['Oct 2026','<span class="num">€210K–260K</span>','Pre-holiday Mega campaign','€14K'],
+  ])+ul(['Register Sep & Oct Mega campaign slots now — do it during August','Use August for creator seeding + DorianLebt-style video briefings','Target CTOR ≥1.41% (April Deals benchmark)','Scale GMV Max Lumea + OneBlade for campaign amplification','Optimistic Q4 combined: <strong>€535K</strong>']);}
+
+function topic_summer(){
+  return `<p><strong>Summer Sale prediction — May 26–Jul 2:</strong></p>`+ul([
+    'Campaign running now — biggest near-term GMV lever',
+    `Conservative: <strong>~€155–185K</strong> in June`,
+    `Base (with improvements): <strong>€185–210K</strong> in June`,
+    `Full campaign window: <strong>€280–330K</strong> base`,
+    '<strong>Critical blocker:</strong> 32 OOS SKUs must be replenished immediately',
+    'Activate LIVE selling sessions daily + bundles from day 1',
+    'Scale DorianLebt (114x ROI) + Produkt.bruder (19x) on GMV Max during campaign'
+  ]);}
+
+function topic_august(){
+  return `<p><strong>August — the slow month:</strong></p><p>Forecast: <span class="num">€120K–145K</span> base. Use it productively:</p>`+ol(['Register Sep & Oct Mega campaign slots','Ship 200 strategic samples — build Q4 pipeline','Brief DorianLebt + fundkugel_UGC for Sep/Oct campaign videos','A/B test GMV Max creatives with new videos','Fix Beauty Set campaign (€77 spend, €0 revenue)','Audit and respond to 85 negative reviews']);}
+
+function topic_all_improvements(){
+  return `<p><strong>6 improvement levers — prioritised:</strong></p>`+
+  `<p>${bdg('b-red','#1 immediate')} <strong>Replenish 32 OOS SKUs</strong> — Summer Sale is live, every day OOS = lost campaign revenue. Uplift: direct, estimate €5–15K/day recovery.</p>`+
+  `<p>${bdg('b-red','#2 immediate')} <strong>Fix GMV Max Beauty Set</strong> — €77.72 spent, €0 revenue. Pause or fix the listing/creative. Also pause reapez from all GMV Max campaigns (2x ROI + 79% refund rate).</p>`+
+  `<p>${bdg('b-amber','#3 high upside')} <strong>Scale GMV Max top performers</strong> — Lumea 8000/9000 at 15.16x ROI is under-budgeted. OneBlade Intimate at 9.5x has €8K daily budget headroom. Double their budgets. Brief DorianLebt for more videos (114x ROI). Uplift: €15–25K/mo.</p>`+
+  `<p>${bdg('b-amber','#4 high upside')} <strong>Fix refund rate</strong> — 11.5% of GMV refunded, affiliate at 24.9%. Pause reapez (79%). Send creator briefs. Enable return-reason tracking. Uplift: €25–35K/mo recovered.</p>`+
+  `<p>${bdg('b-blue','#5 quick win')} <strong>Scale LIVE with structured selling</strong> — Apr 28–30 showed €20K in 3 days is possible. Run 3–4 selling LIVEs/week during Summer Sale with exclusive deals. Uplift: €15–25K/mo.</p>`+
+  `<p>${bdg('b-blue','#6 strategic')} <strong>Q4 campaign calendar</strong> — register Sep & Oct Mega slots now. Use Aug for seeding. Target CTOR ≥1.41%. Uplift: €30–50K per campaign.</p>`+
+  `<p style="font-size:12px;margin-top:6px">Combined potential #1–5: <strong>€60–100K/mo</strong> within 60 days.</p>`;}
+
+function topic_priority(){
+  return `<p><strong>Top priority actions — do these now:</strong></p>`+
+  `<p>${bdg('b-red','#1 today')} <strong>Replenish 32 OOS SKUs.</strong> Summer Sale launched today. These SKUs are missing the biggest campaign window of the half-year.</p>`+
+  `<p>${bdg('b-red','#2 today')} <strong>Pause reapez from ALL campaigns.</strong> 79% refund rate + 2x GMV Max ROI. Net contribution is negative. Remove now.</p>`+
+  `<p>${bdg('b-red','#3 today')} <strong>Pause Beauty Set GMV Max campaign.</strong> €77.72 spent with exactly €0 revenue. Something is broken — listing, creative, or targeting.</p>`+
+  `<p>${bdg('b-amber','#4 this week')} <strong>Brief DorianLebt for 5 new videos.</strong> 114x ROI on GMV Max. This creator is your best-performing ad creative ever. More content immediately.</p>`+
+  `<p>${bdg('b-amber','#5 this week')} <strong>Increase Lumea 8000/9000 GMV Max budget.</strong> 15.16x ROI is exceptional — this campaign is massively under-funded at €348 spend this week.</p>`+
+  `<p style="font-size:12px;color:var(--text2);margin-top:6px">Actions 1–3 can be done in 30 minutes today. Combined impact: <strong>€40–60K+ GMV recovery</strong> within 30 days.</p>`;}
+
+function topic_specific_creator(q){
+  const map={
+    misstestet:{gmv:15509,orders:386,aov:40.18,refund:9,commission:1499,followers:13582,note:'#1 performer by GMV this week. 16 videos. Small following but exceptional conversion. This is your most valuable creator.'},
+    reapez:{gmv:1811,orders:38,aov:47.65,refund:79,commission:158,followers:17686,note:'🚨 MUST PAUSE ALL CAMPAIGNS. 79% refund rate. On GMV Max: €175 spend, €356 revenue = 2x ROI but refunds cancel most profit. Net contribution is negative.'},
+    danbor00:{gmv:2207,orders:65,aov:33.95,refund:23,commission:143,followers:324778,note:'Largest audience (324K) but 23% refund rate. Huge potential if content accuracy fixed. Send updated product brief.'},
+    'jonas.jamess':{gmv:2197,orders:73,aov:30.10,refund:28,commission:148,followers:24229,note:'28% refund rate + 7x GMV Max ROI. Revenue is good but refunds need addressing. Specific SKUs are being misrepresented.'},
+    deal_detektivin:{gmv:2018,orders:66,aov:30.58,refund:4,commission:160,followers:6845,note:'✓ Model creator. 4% refund rate. 112x sample ROI. 6.8K followers but extremely consistent. Increase sample allocation and GMV Max spend on their content.'},
+    emmasbeautyy1:{gmv:1768,orders:9,aov:196.47,refund:0,commission:144,followers:16737,note:'✓ Exceptional. €196 AOV + 0% refunds = highest quality creator in portfolio. Likely selling premium Philips sets. Study and replicate.'},
+    dorianlebt:{gmv:1432,orders:47,aov:30.47,refund:6,commission:117,followers:14975,note:'✓ 114x ROI on GMV Max video "Schau bis zum Ende 😳" — your best creative ever. Brief immediately for 5+ new videos. 6% refund rate acceptable.'},
+  };
+  for(const[k,d] of Object.entries(map)){if(q.includes(k.toLowerCase())){
+    return `<p><strong>Creator: ${k}</strong></p>`+
+    tbl(['Metric','Value'],[
+      ['GMV (May 18–24)',`<span class="num">${fe(d.gmv)}</span>`],['Orders',fn(d.orders)],['AOV',`<span class="num">€${d.aov}</span>`],
+      ['Refund rate',`<span class="${d.refund>20?'dn':'up'}">${d.refund}%</span>`],['Commission',`<span class="num">${fe(d.commission)}</span>`],['Followers',fn(d.followers)]
+    ])+`<p>${d.note}</p>`;}
+  }
+  return `<p>I have profiles for: misstestet, reapez, danbor00, jonas.jamess, deal_detektivin, emmasbeautyy1, dorianlebt. Ask about any one specifically.</p>`;}
+
+function topic_improvements_specific(q){
+  if(/refund/.test(q)) return `<p>${bdg('b-red','#4 high impact')} <strong>Fix refund rate — action plan:</strong></p>${ol(['Pause reapez immediately from all campaigns','Audit SKUs being returned by jonas.jamess (28%) and danbor00 (23%)','Send updated product briefs with accurate specs to all creators','Enable return reason tracking in Seller Center','Set 8% refund rate alerts per SKU','Target: below 7% overall, below 12% affiliate. Uplift: €25–35K/mo'])}`; 
+  if(/live/.test(q)) return `<p>${bdg('b-amber','#5 high upside')} <strong>Scale LIVE — action plan:</strong></p>${ol(['Schedule 3–4 structured selling LIVE sessions/week during Summer Sale','LIVE-only exclusive deals: time-limited discounts only available live','Target €500–800/session (vs ~€182 current avg on active days)','Apr 30 CTOR was 5.17% — that\'s the benchmark. Align LIVEs with campaign timing','Track CTOR per session to identify best formats. Uplift: €15–25K/mo'])}`;
+  if(/creator|outreach/.test(q)) return `<p>${bdg('b-blue','creator programme')} <strong>Fix creator outreach — action plan:</strong></p>${ol(['Personalise every outreach message — reference creator\'s specific content','Lead with: "DorianLebt earned 114x ROI with one video" as social proof','Include sample offer in first message — converts better than commission offers','Segment outreach: deal-creators (reapez model) vs premium-beauty (emmasbeautyy1 model)','Ship beautytalkmitanna (213K followers) samples immediately — never sampled','Increase samples to 100+/month. Target: 120+ daily active creators. Uplift: €20–40K/mo'])}`;
+  if(/bundle/.test(q)) return `<p>${bdg('b-blue','#6 quick win')} <strong>Lift AOV with bundles:</strong></p>${ol(['Create product bundles: OneBlade + accessories, Lumea complete set','Brief emmasbeautyy1 to create bundle content (they already hit €196 AOV)','Add "frequently bought together" on high-traffic product cards','Run bundle-exclusive promotions during Summer Sale now','Target: AOV €38–42. Uplift: €15–20K/mo'])}`;
+  return topic_all_improvements();
+}
+
+function smartFallback(q){
+  if(q.includes('campaign') || q.includes('kamp') || q.includes('kagn') || q.includes('sale') || q.includes('mega')) return topic_campaigns();
+  if(q.includes('gmv') || q.includes('revenue') || q.includes('umsatz') || q.includes('earn')) return topic_gmv_fullyear();
+  if(q.includes('creator') || q.includes('influencer')) return topic_top_creators();
+  if(q.includes('refund') || q.includes('return') || q.includes('retour')) return topic_refunds();
+  if(q.includes('stock') || q.includes('product') || q.includes('sku') || q.includes('lager') || q.includes('produkt')) return topic_product_catalogue();
+  if(q.includes('live')) return topic_live();
+  if(q.includes('video') || q.includes('clip')) return topic_video();
+  if(q.includes('ad') || q.includes('spend') || q.includes('werbung')) return topic_ads_overview();
+  if(q.includes('forecast') || q.includes('prognos') || q.includes('predict')) return topic_forecast();
+  if(q.includes('strateg') || q.includes('plan') || q.includes('year') || q.includes('jahr') || q.includes('2027') || q.includes('2028')) return topic_three_year();
+  if(q.includes('week') || q.includes('woche') || q.includes('today') || q.includes('heute') || q.includes('now')) return topic_weekly_plan();
+  if(q.includes('improv') || q.includes('better') || q.includes('verbess') || q.includes('besser')) return topic_all_improvements();
+  if(q.includes('priorit') || q.includes('urgent') || q.includes('first') || q.includes('dringend')) return topic_priority();
+  if(q.includes('affiliate') || q.includes('provision')) return topic_affiliate_stats();
+  if(q.includes('2025') || q.includes('launch') || q.includes('start')) return topic_2025_history();
+  return null;
+}
+
+function topic_whatdata_de(){
+  return '<p><strong>20 Reports geladen — vollstandige Übersicht:</strong></p><ul>' +
+  '<li><strong>Shop Analytics (ganzes Jahr)</strong> — 1. Jan bis 26. Mai 2026: täglicher GMV, Bestellungen, LIVE, Video, Retouren</li>' +
+  '<li><strong>GMV Max / Shop Ads (Ganzes Jahr)</strong> — Mai 2025 bis Mai 2026: 13 Kampagnen, 17.647 Creatives, ROI, Top Videos</li>' +
+  '<li><strong>LIVE GMV Max</strong> — 3 Kampagnen, gesamt €137.697 Umsatz bei 7,52x ROI</li>' +
+  '<li><strong>Kampagnen 2026</strong> — alle 6 Mega-Kampagnen mit GMV, CTOR, AOV</li>' +
+  '<li><strong>Creator-Liste (18.-24. Mai)</strong> — 8.241 Creator mit GMV, Retouren, Provision</li>' +
+  '<li><strong>Transaktionsanalyse (Aug 2025 bis Mai 2026)</strong> — vollstandige Programmhistorie</li>' +
+  '<li><strong>Produktkatalog</strong> — alle SKUs mit Lagerstatus</li>' +
+  '<li><strong>Affiliate-Statistiken, Outreach, Samples, Produktkarte, Prognose</strong></li>' +
+  '</ul>';
+}
+
+function topic_dashboard_de(){
+  return '<p><strong>Dashboard — letzte 7 Tage (24. Mai):</strong></p>' +
+  '<table><tr><th>Kennzahl</th><th>Wert</th><th>Anderung</th></tr>' +
+  '<tr><td>GMV</td><td><span class="num">€92.729</span></td><td><span class="dn">↓29,42%</span></td></tr>' +
+  '<tr><td>Kunden</td><td><span class="num">2.603</span></td><td><span class="dn">↓34,1%</span></td></tr>' +
+  '<tr><td>Besucher</td><td><span class="num">230.540</span></td><td><span class="dn">↓11,68%</span></td></tr>' +
+  '</table>' +
+  '<p><strong>Dringende Probleme:</strong></p><ul>' +
+  '<li><span class="dn"><strong>7+ SKUs nicht vorrätig</strong></span> — inkl. Facial Hair Remover 5000 (größte GMV Max Kampagne), Lumea 8000 (15x ROI am Risiko), Body & Balls, OneBlade Face 360</li>' +
+  '<li><span class="dn"><strong>LIVE GMV Max Campaign 1 liefert nicht</strong></span> — €1.000/Tag Budget ungenutzt, 7,52x ROI bewiesen. Asset nicht verfügbar</li>' +
+  '<li><span class="dn"><strong>Beauty Set GMV Max: €0 Umsatz</strong></span> — €303 ausgegeben, €357 Einnahmen, 1,18x ROI. Pausieren oder reparieren</li>' +
+  '<li><span class="wrn"><strong>485 offene Retouren</strong></span> — 4 dringend</li>' +
+  '<li><span class="wrn"><strong>85 negative Bewertungen</strong></span> — Antwort notwendig</li>' +
+  '</ul>';
+}
+
+function topic_overall_de(){
+  return '<p><strong>Shop-Gesundheit — Gesamtbild (Jan–Mai 2026):</strong></p>' +
+  '<p><span class="up">Was gut läuft:</span></p><ul>' +
+  '<li>Gesamt-GMV Jan–Mai: <span class="num">€1.714.996</span> — stärke Basis für einen neuen Kanal</li>' +
+  '<li>LIVE GMV ↑187,79% — von null auf echten Umsatz</li>' +
+  '<li>Video GMV ↑548,39% — Creator-Engine skaliert</li>' +
+  '<li>GMV Max: <span class="num">~9,5x ROI</span> auf Top-Kampagne (OneBlade Intimate)</li>' +
+  '<li>DorianLebt Video: <span class="num">114x ROI</span> auf GMV Max — herausragendes Creative</li>' +
+  '<li>Volljahriges Ad ROI: <span class="num">6,52x</span> — effizient für Premium-Pflege</li>' +
+  '</ul>' +
+  '<p><span class="dn">Was behoben werden muss:</span></p><ul>' +
+  '<li><strong>7+ SKUs nicht vorrätig</strong> — direkte Umsatzverluste jeden Tag</li>' +
+  '<li>Retouren: €143.163 Jan–Mai, Rate ↑398% — wachsendes Problem</li>' +
+  '<li>reapez: 79% Retourenrate + 2,02x ROI — alle Kampagnen sofort pausieren</li>' +
+  '<li>LIVE eingebrochen nach 28.–30. Apr — die meisten Mai-Tage €0</li>' +
+  '<li>88,6% des GMV benotigen Rabatt — hohe Rabattabhangigkeit</li>' +
+  '</ul>';
+}
+
+function topic_gmvmax_de(){
+  return '<p><strong>GMV Max — Mai 19–25, 2026:</strong></p>' +
+  '<table><tr><th>Kampagne</th><th>Status</th><th>Ausgaben</th><th>Umsatz</th><th>ROI</th><th>Hinweis</th></tr>' +
+  '<tr><td>OneBlade Intimate (Auto)</td><td><span class="up">Aktiv</span></td><td><span class="num">€2.559</span></td><td><span class="num">€24.297</span></td><td><span class="num">9,50x</span></td><td>Top-Kampagne</td></tr>' +
+  '<tr><td>Lumea 8000/9000</td><td><span class="up">Aktiv</span></td><td><span class="num">€348</span></td><td><span class="num">€5.277</span></td><td><span class="num" style="color:var(--green)">15,16x</span></td><td>Hochster ROI</td></tr>' +
+  '<tr><td>EU April Promotion</td><td><span class="up">Aktiv</span></td><td><span class="num">€779</span></td><td><span class="num">€5.430</span></td><td><span class="num">6,97x</span></td><td></td></tr>' +
+  '<tr><td>Facial Hair Remover 5000</td><td><span class="dn">Liefert nicht</span></td><td><span class="num">€755</span></td><td><span class="num">€5.797</span></td><td><span class="num">7,68x</span></td><td>Nicht vorrätig — Lager auffüllen</td></tr>' +
+  '<tr><td>OneBlade Face 360</td><td><span class="dn">Liefert nicht</span></td><td><span class="num">€299</span></td><td><span class="num">€2.054</span></td><td><span class="num">6,88x</span></td><td>Asset fehlt</td></tr>' +
+  '<tr><td>Bottle&Trimmer</td><td><span class="up">Aktiv</span></td><td><span class="num">€153</span></td><td><span class="num">€1.404</span></td><td><span class="num">9,17x</span></td><td></td></tr>' +
+  '<tr><td>Beauty Set 15.04.26</td><td><span class="dn">Problem</span></td><td><span class="num">€78</span></td><td><span class="num">€0</span></td><td><span class="dn">0x</span></td><td>Sofort pausieren</td></tr>' +
+  '</table>' +
+  '<p><strong>Gesamt dieser Woche:</strong> ~€3.969 Ausgaben · ~€44.259 Umsatz · <span class="num" style="color:var(--green)">Blended ROI ~11,1x</span></p>';
+}
+
+function topic_live_gmvmax_de(){
+  return '<p><strong>LIVE GMV Max — alle Kampagnen:</strong></p>' +
+  '<table><tr><th>Kampagne</th><th>Status</th><th>Ausgaben</th><th>Umsatz</th><th>ROI</th><th>Problem</th></tr>' +
+  '<tr><td>Kampagne 1 (31. Okt 2025)</td><td><span class="dn">Liefert nicht</span></td><td><span class="num">€16.214</span></td><td><span class="num">€137.697</span></td><td><span class="num" style="color:var(--green)">7,52x</span></td><td>Asset nicht verfügbar — dringend beheben</td></tr>' +
+  '<tr><td>Kampagne 2 (22. Okt 2025)</td><td>Inaktiv</td><td><span class="num">€307</span></td><td><span class="num">€379</span></td><td><span class="dn">1,23x</span></td><td>Ziel-ROI zu niedrig (1,0)</td></tr>' +
+  '<tr><td>Kampagne 3 (15. Okt 2025)</td><td>Inaktiv</td><td><span class="num">€24</span></td><td><span class="num">€160</span></td><td><span class="num">6,71x</span></td><td>Fruher Test</td></tr>' +
+  '</table>' +
+  '<p>' + bdg('b-red','SofortMaßnahme') + ' <strong>Kampagne 1 ist deine größte verpasste Chance.</strong> €16.213 ausgegeben, €137.697 Umsatz bei 7,52x ROI — aber liefert nicht, weil das LIVE-Asset nicht verfügbar ist. Das bedeutet €1.000/Tag Budget liegt brach. Gehe zu LIVE GMV Max → Kampagne 1 → Philips Germany Konto neu verbinden (ID: 7517310666145285142).</p>';
+}
+
+function topic_gmvmax_fullyear_de(){
+  return '<p><strong>GMV Max — Ganzes Jahr Mai 2025 bis Mai 2026:</strong></p>' +
+  '<table><tr><th>GesamtÜbersicht</th><th>Wert</th></tr>' +
+  '<tr><td>Gesamte Werbeausgaben</td><td><span class="num">€278.220</span></td></tr>' +
+  '<tr><td>Zugerechneter Umsatz</td><td><span class="num">€1.795.715</span></td></tr>' +
+  '<tr><td>Bestellungen</td><td><span class="num">49.259</span></td></tr>' +
+  '<tr><td>Blended ROI</td><td><span class="num" style="color:var(--green)">6,45x</span></td></tr>' +
+  '</table>' +
+  '<p><strong>Kampagnen nach Umsatz:</strong></p>' +
+  '<table><tr><th>Kampagne</th><th>Ausgaben</th><th>Umsatz</th><th>ROI</th></tr>' +
+  '<tr><td>Facial Hair Remover 5000</td><td>€104.707</td><td><span class="num">€702.080</span></td><td>6,71x</td></tr>' +
+  '<tr><td>OneBlade Intimate</td><td>€80.507</td><td><span class="num">€486.145</span></td><td>6,04x</td></tr>' +
+  '<tr><td>OneBlade Intimate (Auto)</td><td>€42.990</td><td><span class="num">€285.628</span></td><td>6,64x</td></tr>' +
+  '<tr><td>OneBlade Face 360</td><td>€26.639</td><td><span class="num">€178.975</span></td><td>6,72x</td></tr>' +
+  '<tr><td>Lumea 8000/9000</td><td>€5.361</td><td><span class="num">€81.791</span></td><td><span style="color:var(--green)">15,26x</span></td></tr>' +
+  '</table>' +
+  '<p><strong>Produktkarte vs. Video:</strong> Produktkarten generieren <span class="num" style="color:var(--green)">20,92x ROI</span> vs. 5,20x für Videos — 4x effizienter. Du gibst 92% des Budgets für Videos aus.</p>' +
+  '<p><strong>Top Creator nach Jahresumsatz:</strong></p>' +
+  '<table><tr><th>Creator</th><th>Ausgaben</th><th>Umsatz</th><th>ROI</th><th>Hinweis</th></tr>' +
+  '<tr><td>Kristina</td><td>€26.997</td><td><span class="num">€184.108</span></td><td>6,82x</td><td>#1 nach Umsatz</td></tr>' +
+  '<tr><td>jonas.jamess</td><td>€10.153</td><td><span class="num">€90.359</span></td><td>8,90x</td><td>#2 — guter ROI, hohe Retourenrate prüfen</td></tr>' +
+  '<tr><td>Stärke Deals</td><td>€278</td><td><span class="num">€39.609</span></td><td><span style="color:var(--green)">142x</span></td><td>Hochster ROI — massiv unterinvestiert</td></tr>' +
+  '<tr><td>Reapez</td><td>€25.616</td><td><span class="num">€51.740</span></td><td><span class="dn">2,02x</span></td><td>Schlimmster ROI + 79% Retouren — pausieren</td></tr>' +
+  '</table>';
+}
+
+function topic_best_creatives_de(){
+  return '<p><strong>Beste GMV Max Creatives nach ROI — Mai 19–25:</strong></p>' +
+  '<table><tr><th>Creator</th><th>Ausgaben</th><th>Umsatz</th><th>ROI</th><th>Hinweis</th></tr>' +
+  '<tr><td>DorianLebt</td><td><span class="num">€6,70</span></td><td><span class="num">€764,87</span></td><td><span style="color:var(--green)">114x</span></td><td>Bestes Creative im gesamten Portfolio</td></tr>' +
+  '<tr><td>Stärke Deals</td><td><span class="num">€278</span></td><td><span class="num">€39.609</span></td><td><span style="color:var(--green)">142x</span></td><td>Jahres-ROI — massiv unterinvestiert</td></tr>' +
+  '<tr><td>Produkt.bruder</td><td><span class="num">€31,85</span></td><td><span class="num">€605,32</span></td><td><span class="num">19x</span></td><td>Zuverlassiger Performer</td></tr>' +
+  '<tr><td>Produktkarte (OneBlade)</td><td><span class="num">€441,61</span></td><td><span class="num">€5.379</span></td><td><span class="num">12,18x</span></td><td>Produktkarten schlagen Videos im ROI</td></tr>' +
+  '<tr><td>Reapez</td><td><span class="num">€175</span></td><td><span class="num">€356</span></td><td><span class="dn">2,03x</span></td><td>Niedrigster ROI + 79% Retouren — entfernen</td></tr>' +
+  '</table>';
+}
+
+function topic_ads_overview_de(){
+  return '<p><strong>TikTok Ads Manager — Philips_Germany_Ad (Mai 2025 bis Mai 2026, ganzes Jahr):</strong></p>' +
+  '<table><tr><th>Kennzahl</th><th>Wert</th></tr>' +
+  '<tr><td>Gesamte Werbeausgaben</td><td><span class="num">€296.913</span></td></tr>' +
+  '<tr><td>Zugerechnete SKU-Bestellungen</td><td><span class="num">52.624</span></td></tr>' +
+  '<tr><td>Zugerechneter Bruttoumsatz</td><td><span class="num">€1.934.499</span></td></tr>' +
+  '<tr><td>Kosten pro Bestellung</td><td><span class="num">€5,64</span></td></tr>' +
+  '<tr><td>Blended ROI</td><td><span class="num" style="color:var(--green)">6,52x</span></td></tr>' +
+  '</table>' +
+  '<p><strong>Was uns das sagt:</strong></p><ul>' +
+  '<li>Ads trieben <strong>~95% aller Bestellungen</strong> — fast jeder Verkauf hat einen Ad-Touch</li>' +
+  '<li>Effektive Werbekosten als % des Umsätzes: <strong>15,3%</strong> — sehr effizient</li>' +
+  '<li>Kosten pro Bestellung bei €5,64 — ausgezeichnet für ein Premium-Pflegeprodukt</li>' +
+  '<li>Gesamte Akquisitionskosten: Ads 15,3% + Affiliate-Provision 8,3% + Rabatte 27,8% = <span class="wrn">~51% des Umsätzes</span> vor Warenkosten</li>' +
+  '</ul>';
+}
+
+function topic_top_creators_de(){
+  return '<p><strong>Top Creator — 18.–24. Mai (von 8.241 im Programm):</strong></p>' +
+  '<table><tr><th>Creator</th><th>GMV</th><th>Bestellungen</th><th>Retourenquote</th><th>Hinweis</th></tr>' +
+  '<tr><td>misstestet</td><td><span class="num">€15.509</span></td><td>386</td><td><span class="wrn">9%</span></td><td>#1 Performer — 13,6K Follower</td></tr>' +
+  '<tr><td>danbor00</td><td><span class="num">€2.207</span></td><td>65</td><td><span class="dn">23%</span></td><td>324K Follower — Brief senden</td></tr>' +
+  '<tr><td>jonas.jamess</td><td><span class="num">€2.197</span></td><td>73</td><td><span class="dn">28%</span></td><td>Hohe Ausgaben, durchschnittlicher ROI</td></tr>' +
+  '<tr><td>deal_detektivin</td><td><span class="num">€2.018</span></td><td>66</td><td><span class="up">4%</span></td><td>Modell-Creator, 112x Sample-ROI</td></tr>' +
+  '<tr><td>reapez</td><td><span class="num">€1.811</span></td><td>38</td><td><span class="dn">79%</span></td><td>Alle Kampagnen sofort pausieren</td></tr>' +
+  '<tr><td>emmasbeautyy1</td><td><span class="num">€1.768</span></td><td>9</td><td><span class="up">0%</span></td><td>€196 AOV, 0% Retouren — Vorzeige-Creator</td></tr>' +
+  '<tr><td>dorianlebt</td><td><span class="num">€1.432</span></td><td>47</td><td><span class="up">6%</span></td><td>114x GMV Max ROI — sofort briefen für neue Videos</td></tr>' +
+  '</table>' +
+  '<p>Kumulativer Affiliate-GMV (alle 8.241 Creator): <strong>€5.472.781</strong></p>';
+}
+
+function topic_refunds_de(){
+  return '<p><strong>Retouren-Analyse — vollstandiges Bild:</strong></p>' +
+  '<table><tr><th>Quelle</th><th>Retourenwert</th><th>Rate</th><th>Status</th></tr>' +
+  '<tr><td>Ganzes Jahr Jan–Mai 2026</td><td><span class="num">€143.163</span></td><td>~8,3% des GMV</td><td><span class="dn">↑398% vs. Vorjahr</span></td></tr>' +
+  '<tr><td>Affiliate Mai 11–24</td><td><span class="num">€14.616</span></td><td><span class="dn">24,9%</span></td><td>Kritisch</td></tr>' +
+  '<tr><td>reapez (Mai 18–24)</td><td><span class="num">€1.426</span></td><td><span class="dn">79%</span></td><td>Sofort pausieren</td></tr>' +
+  '<tr><td>jonas.jamess</td><td><span class="num">€611</span></td><td><span class="dn">28%</span></td><td>Überprüfen</td></tr>' +
+  '<tr><td>deal_detektivin</td><td><span class="num">€88</span></td><td><span class="up">4%</span></td><td>Vorzeige-Creator</td></tr>' +
+  '</table>' +
+  '<p><strong>Maßnahmenplan:</strong></p><ol>' +
+  '<li>reapez aus ALLEN 11 Kampagnen pausieren</li>' +
+  '<li>Prüfen, welche SKUs von reapez, jonas.jamess, danbor00 beworben werden</li>' +
+  '<li>Aktualisierte Produktbriefs an alle aktiven Creator senden</li>' +
+  '<li>Retourengrund-Tracking im Seller Center aktivieren</li>' +
+  '<li>Ziel: unter 7% gesamt, unter 12% Affiliate</li>' +
+  '</ol>';
+}
+
+function topic_product_catalogue_de(){
+  return '<p><strong>Produktkatalog — Lagerstatus (heute, 26. Mai):</strong></p>' +
+  '<p>' + bdg('b-red','Nicht vorrätig') + ' <strong>Bestätigter Leerbestand:</strong></p><ul>' +
+  '<li>OneBlade Intimate unisex (QP1924) — <strong>Top-Seller, heute nicht lieferbar</strong></li>' +
+  '<li>Facial Hair Remover 5000 — <strong>größte GMV Max Kampagne (€702K Jahresumsatz) liefert nicht</strong></li>' +
+  '<li>OneBlade Haarfrei Set</li><li>Body & Balls Korpperrasierer (2 Varianten)</li>' +
+  '<li>OneBlade Duo Set (auch Inaktiv)</li><li>OneBlade Face 360</li>' +
+  '</ul>' +
+  '<p>' + bdg('b-amber','Wenig Lager') + ' <strong>3 SKUs auf niedrigem Bestand:</strong></p><ul>' +
+  '<li>Lumea Series 8000 — <span class="dn">KRITISCH: läuft die 15,16x ROI GMV Max Kampagne</span></li>' +
+  '<li>Philips Avent Schnuller Ultra</li><li>Sonicare Series 7100</li>' +
+  '</ul>' +
+  '<p><strong>Sofortige Nachbestell-Priorität:</strong></p><ol>' +
+  '<li><strong>Lumea 8000</strong> — 15x ROI Kampagne gefahrdet</li>' +
+  '<li><strong>OneBlade Intimate</strong> — Top-Seller, heute ausverkauft</li>' +
+  '<li><strong>Facial Hair Remover 5000</strong> — größte Ad-Kampagne stopped</li>' +
+  '<li><strong>Body & Balls</strong> — 2 Varianten</li>' +
+  '</ol>';
+}
+
+function topic_affiliate_stats_de(){
+  return '<p><strong>Affiliate-Statistiken — 11.–24. Mai 2026:</strong></p>' +
+  '<table><tr><th>Kennzahl</th><th>Wert</th></tr>' +
+  '<tr><td>Affiliate GMV</td><td><span class="num">€58.757</span></td></tr>' +
+  '<tr><td>Gezahlte Provision</td><td><span class="num">€4.841</span></td></tr>' +
+  '<tr><td>Aktive Kooperationen</td><td><span class="num">1.223</span></td></tr>' +
+  '<tr><td>Gepostete Videos</td><td><span class="num">1.320</span></td></tr>' +
+  '<tr><td>Affiliate-Retouren</td><td><span class="num">€14.616</span> (<span class="dn">24,9%</span>)</td></tr>' +
+  '</table>' +
+  '<p>Die Affiliate-Retourenquote von 24,9% ist doppelt so hoch wie der Shop-Durchschnitt. Creator stellen Produkte falsch dar. Dringend aktualisierte Produktbriefs senden.</p>';
+}
+
+function topic_transaction_analysis_de(){
+  return '<p><strong>Transaktionsanalyse — 29. Aug 2025 bis 25. Mai 2026 (vollstandige Programmhistorie):</strong></p>' +
+  '<table><tr><th>Kennzahl</th><th>Wert</th><th>Erkenntnis</th></tr>' +
+  '<tr><td>Creator-zugerechneter GMV</td><td><span class="num">€1.705.441</span></td><td>~99,5% des Shop-GMV uber Creator</td></tr>' +
+  '<tr><td>Retouren</td><td><span class="num">€130.002</span></td><td><span class="dn">7,6% Retourenquote</span></td></tr>' +
+  '<tr><td>Geschatzte Provision</td><td><span class="num">€149.060</span></td><td>8,74% des GMV</td></tr>' +
+  '<tr><td>Gesamte Videos</td><td><span class="num">21.317</span></td><td>Permanente Content-Bibliothek</td></tr>' +
+  '<tr><td>Versendete Samples</td><td><span class="num">2.457</span></td><td>Creator-Pipeline-Investition</td></tr>' +
+  '</table>' +
+  '<p>' + bdg('b-red','Kritischer Befund') + ' <strong>Nur 42 von 8.241 Creatorn generieren täglich einen Verkauf</strong> — das sind 0,5% Aktivierungsrate. 8.199 Creator sind jeden Tag inaktiv. Selbst 1% Aktivierung wurde ~50% mehr GMV bedeuten.</p>' +
+  '<p>' + bdg('b-amber','Wichtige Erkenntnis') + ' <strong>79% aller LIVE-Streams generieren keinen Umsatz.</strong> 2.624 Streams insgesamt, aber nur 2 pro Tag konvertieren. Passives Streaming funktioniert fast nie.</p>';
+}
+
+function topic_2025_history_de(){
+  return '<p><strong>Shop-Geschichte — 26. Nov bis 31. Dez 2025 (Launch-Periode):</strong></p>' +
+  '<p>TikTok Shop Deutschland startete am 26. November 2025. Dies ist die vollstandige Geschichte der ersten 36 Tage.</p>' +
+  '<table><tr><th>Zeitraum</th><th>GMV</th><th>Bestellungen</th><th>LIVE GMV</th><th>Video GMV</th></tr>' +
+  '<tr><td>Nov 26–30 (5 Tage)</td><td><span class="num">€40.055</span></td><td>1.112</td><td><span class="num">€54.498</span></td><td><span class="num">€3.472</span></td></tr>' +
+  '<tr><td>Dez 1–15</td><td><span class="num">€61.840</span></td><td>1.335</td><td><span class="num">€67.466</span></td><td><span class="num">€4.721</span></td></tr>' +
+  '<tr><td>Dez 16–19</td><td><span class="num">€39.939</span></td><td>1.063</td><td><span class="num">€50.527</span></td><td><span class="num">€1.221</span></td></tr>' +
+  '<tr><td>Dez 20–31</td><td><span class="num">€51.648</span></td><td>2.103</td><td><span class="num">€75.875</span></td><td><span class="num">€3.074</span></td></tr>' +
+  '<tr><td><strong>Gesamt Nov 26–Dez 31</strong></td><td><span class="num">€193.408</span></td><td>5.613</td><td><span class="num">€252.966</span></td><td><span class="num">€12.106</span></td></tr>' +
+  '</table>' +
+  '<p><strong>Saisonale Muster für 2026:</strong></p><ul>' +
+  '<li>Black Friday (28. Nov): bester Einzeltag der ersten 36 Tage mit €16.885</li>' +
+  '<li>4. Dez war der schwachste Tag (€916, 21 Bestellungen) — Post-BF-Montag-Delle</li>' +
+  '<li>17.–19. Dez starker Vor-Weihnachts-Spike (~€10K/Tag)</li>' +
+  '<li>Weihnachtstag (25. Dez) generierte €9.639 — Geschenkeempfanger kaufen</li>' +
+  '<li><strong>Implikation für 2026:</strong> Black Friday (28. Nov) und 17.–23. Dez sind deine zwei größten saisonalen Chancen — plane Mega-Kampagnen jetzt</li>' +
+  '</ul>';
+}
+
+function topic_forecast_de(){
+  return '<p><strong>5-Monats-Prognose — Jun–Okt 2026:</strong></p>' +
+  '<table><tr><th>Szenario</th><th>Gesamt</th><th>Monatsdurchschnitt</th><th>Basis</th></tr>' +
+  '<tr><td>Konservativ</td><td><span class="num">€780K</span></td><td><span class="num">€156K/Mo</span></td><td>Keine Anderungen, aktuelle Probleme bleiben</td></tr>' +
+  '<tr><td><strong>Basis (empfohlen)</strong></td><td><span class="num" style="color:#93c5fd">€1,05M</span></td><td><span class="num" style="color:#93c5fd">€210K/Mo</span></td><td>Verbesserungen + GMV Max Skalierung</td></tr>' +
+  '<tr><td>Optimistisch</td><td><span class="num" style="color:var(--green)">€1,32M</span></td><td><span class="num" style="color:var(--green)">€264K/Mo</span></td><td>Alle Hebel greifen, LIVE verdoppelt sich</td></tr>' +
+  '</table>' +
+  '<table><tr><th>Monat</th><th>GMV Prognose</th><th>Haupttreiber</th></tr>' +
+  '<tr><td>Jun 2026</td><td><span class="num">€185K–210K</span></td><td>Summer Sale Peak (Mai 26–Jul 2)</td></tr>' +
+  '<tr><td>Jul 2026</td><td><span class="num">€140K–165K</span></td><td>Post-Sale, EU-Sommerdip</td></tr>' +
+  '<tr><td>Aug 2026</td><td><span class="num">€120K–145K</span></td><td>Schwachster Monat — EU-Ferien</td></tr>' +
+  '<tr><td>Sep 2026</td><td><span class="num">€185K–210K</span></td><td>Back-to-School Mega-Kampagne</td></tr>' +
+  '<tr><td>Okt 2026</td><td><span class="num">€210K–260K</span></td><td>Vor-Weihnachts Q4 Ramp</td></tr>' +
+  '</table>';
+}
+
+function topic_gmv_fullyear_de(){
+  return '<p><strong>Ganzes Jahr GMV — 1. Jan bis 26. Mai 2026:</strong></p>' +
+  '<table><tr><th>Kennzahl</th><th>Jan–Mai 2026</th><th>vs. Vorjahr</th></tr>' +
+  '<tr><td>Gesamt GMV</td><td><span class="num">€1.714.996</span></td><td><span class="up">↑485,33%</span></td></tr>' +
+  '<tr><td>Bestellungen</td><td><span class="num">55.353</span></td><td><span class="up">↑532,24%</span></td></tr>' +
+  '<tr><td>Kunden</td><td><span class="num">54.093</span></td><td><span class="up">↑531,26%</span></td></tr>' +
+  '<tr><td>AOV</td><td><span class="num">€30,98</span></td><td><span class="dn">↓7,42%</span></td></tr>' +
+  '<tr><td>LIVE GMV</td><td><span class="num">€118.712</span></td><td><span class="up">↑187,79%</span></td></tr>' +
+  '<tr><td>Video GMV</td><td><span class="num">€1.471.721</span></td><td><span class="up">↑548,39%</span></td></tr>' +
+  '<tr><td>Produktkarten GMV</td><td><span class="num">€124.563</span></td><td><span class="up">↑402,98%</span></td></tr>' +
+  '</table>' +
+  '<p><strong>Monatliche Aufschlüsselung:</strong></p>' +
+  '<table><tr><th>Monat</th><th>GMV</th><th>Haupttreiber</th></tr>' +
+  '<tr><td>Jan 2026</td><td><span class="num">~€45.800</span></td><td>Winter Sale</td></tr>' +
+  '<tr><td>Feb 2026</td><td><span class="num">~€105.200</span></td><td>Valentinstag + Feb Deals</td></tr>' +
+  '<tr><td>Marz 2026</td><td><span class="num">~€180.000</span></td><td>Spring Sale Anlauf</td></tr>' +
+  '<tr><td>Apr 2026</td><td><span class="num">~€325.000</span></td><td>Spring Sale Peak + April Deals</td></tr>' +
+  '<tr><td>Mai 2026</td><td><span class="num">~€208.000</span></td><td>April Deals Ausklang + Spring Escape</td></tr>' +
+  '</table>';
+}
+
+function topic_campaigns_de(){
+  return '<p><strong>2026 Mega-Kampagnen nach GMV:</strong></p>' +
+  '<table><tr><th>Kampagne</th><th>Zeitraum</th><th>GMV</th><th>Bestellungen</th><th>CTOR</th><th>AOV</th></tr>' +
+  '<tr><td>2026 Spring Sale</td><td>24. Mar – 1. Apr</td><td><span class="num">€272.850</span></td><td>9.289</td><td>1,34%</td><td>€29,37</td></tr>' +
+  '<tr><td>April Deals For You</td><td>25. Apr – 7. Mai</td><td><span class="num">€258.171</span></td><td>8.033</td><td>1,41%</td><td>€32,14</td></tr>' +
+  '<tr><td>Spring Escape</td><td>13.–18. Mai</td><td><span class="num">€89.531</span></td><td>2.736</td><td>1,10%</td><td>€32,72</td></tr>' +
+  '<tr><td>February Deals</td><td>26. Feb – 3. Mar</td><td><span class="num">€59.641</span></td><td>1.705</td><td>0,89%</td><td>€34,98</td></tr>' +
+  '<tr><td>Winter Sale 2026</td><td>7.–11. Jan</td><td><span class="num">€45.826</span></td><td>1.421</td><td>0,93%</td><td>€32,25</td></tr>' +
+  '<tr><td>Valentinstag</td><td>4.–6. Feb</td><td><span class="num">€45.517</span></td><td>1.722</td><td>1,09%</td><td>€26,43</td></tr>' +
+  '</table>' +
+  '<p>Spring Sale + April Deals = <strong>84%</strong> des gesamten Kampagnen-GMV. Summer Sale läuft gerade (26. Mai – 2. Jul).</p>';
+}
+
+function topic_live_de(){
+  return '<p><strong>LIVE Performance — 27. Apr bis 24. Mai 2026:</strong></p>' +
+  '<p><strong>27.–30. Apr (Kampagnen-Peak — außergewöhnlich):</strong></p>' +
+  '<table><tr><th>Datum</th><th>LIVE GMV</th><th>Streams</th><th>Views</th><th>CTOR</th></tr>' +
+  '<tr><td>28. Apr</td><td><span class="num">€6.443</span></td><td>23</td><td>151.764</td><td>2,89%</td></tr>' +
+  '<tr><td>29. Apr</td><td><span class="num">€6.378</span></td><td>21</td><td>159.808</td><td>3,29%</td></tr>' +
+  '<tr><td>30. Apr</td><td><span class="num" style="color:var(--green)">€7.816 (bester Tag)</span></td><td>19</td><td>133.127</td><td>5,17%</td></tr>' +
+  '</table>' +
+  '<p>28.–30. Apr = ~€20K in 3 Tagen. Der Rest des Mai zusammen = ~€7K. Die Lücke ist riesig. Strukturiertes LIVE-Selling mit kampagnengebundenen Deals treibt den Umsatz — passives Streaming funktioniert fast nie.</p>';
+}
+
+function topic_video_de(){
+  return '<p><strong>Video Performance — 27. Apr bis 24. Mai 2026:</strong></p>' +
+  '<table><tr><th>Woche</th><th>Durchschn. GMV/Tag</th><th>Durchschn. GPM</th><th>Durchschn. CTOR</th></tr>' +
+  '<tr><td>27.–30. Apr</td><td><span class="num">€27.756</span></td><td>€7,40</td><td>1,58%</td></tr>' +
+  '<tr><td>1.–7. Mai</td><td><span class="num">€11.000</span></td><td>€7,80</td><td>1,22%</td></tr>' +
+  '<tr><td>8.–14. Mai</td><td><span class="num">€8.700</span></td><td>€6,65</td><td>0,99%</td></tr>' +
+  '<tr><td>15.–21. Mai</td><td><span class="num">€13.500</span></td><td>€6,45</td><td>1,07%</td></tr>' +
+  '<tr><td>22.–24. Mai</td><td><span class="num">€3.900</span></td><td>€5,69</td><td><span class="dn">0,51% ↓</span></td></tr>' +
+  '</table>' +
+  '<p>GPM (Umsatz pro 1.000 Views) sinkt: €7,80 → €5,69. CTOR von 1,6% im April auf 0,37% am 23.–24. Mai — Post-Kampagnen-Delle. Summer Sale sollte dies umkehren.</p>';
+}
+
+function topic_promo_tools_de(){
+  return '<p><strong>Promotion-Tools — 19.–25. Mai 2026:</strong></p>' +
+  '<table><tr><th>Kennzahl</th><th>Wert</th><th>vs. Vorperiode</th></tr>' +
+  '<tr><td>GMV uber Promotions</td><td><span class="num">€49.590</span></td><td><span class="up">↑6,58%</span></td></tr>' +
+  '<tr><td>% des Shop-GMV</td><td><span class="num">88,62%</span></td><td>Konstant</td></tr>' +
+  '<tr><td>Bestellungen</td><td><span class="num">1.365</span></td><td><span class="up">↑10,71%</span></td></tr>' +
+  '<tr><td>AOV</td><td><span class="num">€36,33</span></td><td><span class="dn">↓3,74%</span></td></tr>' +
+  '<tr><td>Gesamter Rabatt</td><td><span class="num">€13.795</span></td><td><span class="dn">↑2,65%</span></td></tr>' +
+  '</table>' +
+  '<p><span class="wrn">Wichtige Erkenntnis:</span> <strong>88,6% des GMV benotigen einen Rabatt oder eine Promotion, um zu konvertieren.</strong> Effektive Rabattkosten: ~27,8% des Umsätzes. Zusammen mit Provision (8,3%) und Ads (15,3%) = <span class="dn">~51% Akquisitionskosten</span> vor Warenkosten.</p>';
+}
+
+function topic_three_year_de(){
+  return '<p><strong>3-Jahres-Strategiefahrplan — Philips Deutschland TikTok Shop</strong></p>' +
+  '<h3>2026 — Reparieren und Launchen</h3><ul>' +
+  '<li>Run-Rate: ~€1,5–2M Jahres-GMV</li>' +
+  '<li>3 dringende Probleme beheben: OOS-Lager, Retouren (↑398%), LIVE-Aktivierung</li>' +
+  '<li>GMV Max skalieren: Lumea bei 15x ROI und OneBlade Intimate bei 9,5x verdienen mehr Budget</li>' +
+  '<li>DorianLebt Video bei 114x ROI — sofort für 5+ neue Videos briefen</li>' +
+  '<li>Ziel Gesamtjahr 2026: €2,7–2,8M</li>' +
+  '</ul>' +
+  '<h3>2027 — Creator und Ads Engine skalieren</h3><ul>' +
+  '<li>Ziel GMV: €3–5M (2–2,5x 2026)</li>' +
+  '<li>Creator-Basis: 77 → 300+ tägliche aktive Creator</li>' +
+  '<li>GMV Max: Top-Kampagnen auf €10K+/Tag skalieren bei 8x+ ROI</li>' +
+  '<li>LIVE Commerce: 1 strukturiertes LIVE/Tag Minimum</li>' +
+  '<li>AOV: €33 → €45+ durch Bundles und Produktsets</li>' +
+  '</ul>' +
+  '<h3>2028 — Marktführerschaft</h3><ul>' +
+  '<li>Ziel GMV: €6–10M</li>' +
+  '<li>LIVE als Hauptkanal: 30%+ des GMV (vs. 6,9% heute)</li>' +
+  '<li>GMV Max in großem Maßstab: €50K+/Monat Ausgaben</li>' +
+  '<li>Creator-Ökosystem: Top-50-Creator erhalten exklusive Konditionen</li>' +
+  '</ul>';
+}
+
+function topic_priority_de(){
+  return '<p><strong>Top Prioritäten — sofort handeln:</strong></p>' +
+  '<p>' + bdg('b-red','#1 heute') + ' <strong>7+ OOS SKUs auffüllen.</strong> Summer Sale läuft gerade. Facial Hair Remover 5000 (€702K Jahres-GMV Max) und Lumea 8000 (15x ROI) sind betroffen.</p>' +
+  '<p>' + bdg('b-red','#2 heute') + ' <strong>reapez aus ALLEN 11 Kampagnen pausieren.</strong> 79% Retourenrate + 2,02x ROI. Nettogewinn negativ.</p>' +
+  '<p>' + bdg('b-red','#3 heute') + ' <strong>Beauty Set GMV Max pausieren.</strong> €303 ausgegeben, €0 Umsatz. Kaputt.</p>' +
+  '<p>' + bdg('b-amber','#4 diese Woche') + ' <strong>DorianLebt für 5 neue Videos briefen.</strong> 114x ROI auf GMV Max — bestes Creative aller Zeiten.</p>' +
+  '<p>' + bdg('b-amber','#5 diese Woche') + ' <strong>LIVE GMV Max Campaign 1 reparieren.</strong> €1.000/Tag Budget liegt brach, 7,52x ROI bewiesen.</p>' +
+  '<p>' + bdg('b-blue','#6 diese Woche') + ' <strong>Lumea 8000/9000 GMV Max Budget erhöhen.</strong> 15,26x ROI ganzes Jahr — massiv unterinvestiert.</p>' +
+  '<p style="font-size:12px;color:var(--t2);margin-top:6px">Maßnahmen 1–3 können heute in 30 Minuten erledigt werden. Kombinierter Einfluss: <strong>€40.000–60.000+ GMV-Erholung</strong> innerhalb von 30 Tagen.</p>';
+}
+
+function topic_all_improvements_de(){
+  return '<p><strong>6 Verbesserungshebel — priorisiert:</strong></p>' +
+  '<p>' + bdg('b-red','#1 sofort') + ' <strong>7+ OOS SKUs auffüllen</strong> — Summer Sale läuft, Umsatzverlust jeden Tag. Hochste Priorität.</p>' +
+  '<p>' + bdg('b-red','#2 sofort') + ' <strong>Kaputte GMV Max-Kampagnen reparieren</strong> — Beauty Set (€0 ROI) pausieren, reapez entfernen (2x ROI + 79% Retouren = Nettoverlust). Einsparung: ~€127K verlorener Umsatz pro Jahr.</p>' +
+  '<p>' + bdg('b-amber','#3 hoher Gewinn') + ' <strong>GMV Max Top-Performer skalieren</strong> — Lumea bei 15,26x ROI, Stärke Deals bei 142x. DorianLebt für mehr Videos briefen. Potenzial: +€15.000–25.000/Mo.</p>' +
+  '<p>' + bdg('b-amber','#4 hoher Gewinn') + ' <strong>Retourenrate senken</strong> — 11,5% Shop, 24,9% Affiliate. Creator-Briefs aktualisieren, Retourengrund-Tracking aktivieren. Potenzial: +€25.000–35.000/Mo erholt.</p>' +
+  '<p>' + bdg('b-blue','#5 schneller Gewinn') + ' <strong>LIVE mit strukturiertem Selling skalieren</strong> — 28.–30. Apr zeigten €20K in 3 Tagen. 3–4 Selling-LIVEs/Woche wahrend Summer Sale. Potenzial: +€15.000–25.000/Mo.</p>' +
+  '<p>' + bdg('b-blue','#6 strategisch') + ' <strong>Q4 Kampagnenkalender</strong> — Sep und Okt Mega-Slots jetzt registrieren. Ziel CTOR ≥1,41%. Potenzial: +€30.000–50.000 pro Kampagne.</p>' +
+  '<p style="font-size:12px;margin-top:6px">Kombiniertes Potenzial Nr. 1–5: <strong>€60.000–100.000/Mo</strong> innerhalb von 60 Tagen.</p>';
+}
+
+function topic_q4_de(){
+  return '<p><strong>Q4 Ausblick — Sep und Okt 2026:</strong></p>' +
+  '<table><tr><th>Monat</th><th>GMV Prognose</th><th>Treiber</th></tr>' +
+  '<tr><td>Sep 2026</td><td><span class="num">€185K–210K</span></td><td>Back-to-School Mega-Kampagne</td></tr>' +
+  '<tr><td>Okt 2026</td><td><span class="num">€210K–260K</span></td><td>Vor-Weihnachts Mega-Kampagne</td></tr>' +
+  '<tr><td>28. Nov 2026 (Black Friday)</td><td><span class="num">€35K–50K einzelner Tag</span></td><td>BF 2025 war €16.885 — 2026 könnte 2–3x werden</td></tr>' +
+  '<tr><td>17.–23. Dez 2026</td><td><span class="num">€80K–120K</span></td><td>Vor-Weihnachtswoche — starkste saisonale Muster</td></tr>' +
+  '</table><ul>' +
+  '<li>Sep- und Okt-Mega-Slots jetzt registrieren — Aug für Seeding nutzen</li>' +
+  '<li>Ziel CTOR ≥1,41% (April Deals Benchmark)</li>' +
+  '<li>GMV Max Lumea + OneBlade für Kampagnenamplifizierung skalieren</li>' +
+  '</ul>';
+}
+
+function topic_one_year_plan_de(){
+  return '<p><strong>1-Jahres-Verbesserungsplan — basierend auf deinen echten Daten:</strong></p>' +
+  '<p>Ausgangspunkt heute (26. Mai 2026): <span class="num">€1,71M</span> GMV Jan–Mai, <span class="num">6,52x</span> Ad ROI, <span class="num">8.241</span> Creator, <span class="num">0,5%</span> tägliche Aktivierungsrate.</p>' +
+  '<h3>Monat 1 — Juni 2026 (Lecks stopfen)</h3><ul>' +
+  '<li><strong>7+ OOS SKUs sofort nachbestellen</strong> — Facial Hair Remover 5000 ist deine größte GMV Max Kampagne (€702K Umsatz, 6,71x ROI) und liefert nicht. Lumea 8000 ist auf niedrigem Bestand und betreibt die 15,26x ROI Kampagne</li>' +
+  '<li><strong>reapez aus allen 11 Kampagnen pausieren</strong> — €25.616 ausgegeben bei 2,02x ROI. Bei deinem 7x Durchschnitt hatte dasselbe Budget ~€179K generiert. Die Lücke: <strong>~€127K verlorener Umsatz</strong></li>' +
+  '<li><strong>LIVE GMV Max Kampagne 1 reparieren</strong> — €16.213 Ausgaben, €137.697 Umsatz, 7,52x ROI, aber liefert nicht wegen fehlenden Assets. €1.000/Tag Budget brachliegend</li>' +
+  '<li><strong>Beauty Set GMV Max pausieren</strong> — €303 ausgegeben, €357 Umsatz, 1,18x ROI. Funktioniert nicht</li>' +
+  '</ul>' +
+  '<h3>Monat 2–3 — Jul–Aug 2026 (Was funktioniert skalieren)</h3><ul>' +
+  '<li><strong>Lumea 8000/9000 GMV Max Budget skalieren</strong> — 15,26x ROI ganzes Jahr bei nur €5.361 Gesamtausgaben. Massiv unterinvestiert</li>' +
+  '<li><strong>DorianLebt für 5+ neue Videos briefen</strong> — 114x ROI auf GMV Max. Kristina generierte €184.108 ganzes Jahr bei 6,82x — #1 Creator nach Umsatz</li>' +
+  '<li><strong>20% des Video GMV Max Budgets auf Produktkarten verlagern</strong> — Karten 20,92x ROI vs. 5,20x für Videos. Potenzial riesig</li>' +
+  '<li><strong>Sep- und Okt-Mega-Kampagnen-Slots jetzt registrieren</strong></li>' +
+  '</ul>' +
+  '<h3>Monat 4–6 — Sep–Nov 2026 (Q4 Ramp)</h3><ul>' +
+  '<li><strong>September Mega-Kampagne</strong> — Spring Sale (€272K) und April Deals (€258K) als Benchmark</li>' +
+  '<li><strong>Oktober Vor-Weihnachts Mega-Kampagne</strong> — Black Friday 2025 war €16.885 mit winziger Creator-Basis. BF 2026 mit 27K+ Videos könnte €35–50K erreichen</li>' +
+  '<li><strong>Strukturiertes LIVE-Selling aktivieren</strong> — 3–4 Selling-LIVEs/Woche. Apr 28–30 zeigte €20K in 3 Tagen</li>' +
+  '</ul>' +
+  '<p><strong>Erwartete Ergebnisse bis Mai 2027:</strong></p>' +
+  '<table><tr><th>Kennzahl</th><th>Heute</th><th>Ziel Mai 2027</th></tr>' +
+  '<tr><td>Monatlicher GMV</td><td>~€210K/Mo</td><td><span class="num">€400–500K/Mo</span></td></tr>' +
+  '<tr><td>Aktive Creator/Tag</td><td>42</td><td><span class="num">100+</span></td></tr>' +
+  '<tr><td>GMV Max Blended ROI</td><td>6,52x</td><td><span class="num">8x+</span></td></tr>' +
+  '<tr><td>LIVE GMV %</td><td>6,9%</td><td><span class="num">15%+</span></td></tr>' +
+  '<tr><td>Retourenquote (Affiliate)</td><td><span class="dn">24,9%</span></td><td><span class="up">unter 12%</span></td></tr>' +
+  '</table>';
+}
+
+function topic_weekly_plan_de(){
+  return '<p><strong>Nächste-Woche Aktionsplan — basierend auf deinen Live-Daten:</strong></p>' +
+  '<h3>Heute / Morgen — Umsatzverluste stoppen</h3><ul>' +
+  '<li><strong>OOS SKUs nachbestellen</strong> — Facial Hair Remover 5000 (größte GMV Max Kampagne, €702K Jahresumsatz) ist nicht vorrätig. Lumea 8000 auf niedrigem Bestand läuft 15,26x ROI Kampagne. Heute Lager kontaktieren</li>' +
+  '<li><strong>reapez aus allen 11 Kampagnen pausieren</strong> — 2,02x ROI + 79% Retourenrate. Nettobeitrag negativ. 10 Minuten Arbeit</li>' +
+  '<li><strong>Beauty Set GMV Max pausieren</strong> — €303 ausgegeben, €357 Umsatz, 1,18x ROI. Kaputt</li>' +
+  '</ul>' +
+  '<h3>Diese Woche — Was funktioniert skalieren</h3><ul>' +
+  '<li><strong>DorianLebt für 5 neue Videos briefen</strong> — "Schau bis zum Ende" Video: €6,70 Ausgaben → €764,87 Umsatz = 114x ROI. Heute kontaktieren</li>' +
+  '<li><strong>Lumea 8000/9000 GMV Max Budget erhöhen</strong> — 15,26x ROI ganzes Jahr bei nur €5.361 Gesamtausgaben. Budget verdoppeln sobald Lager bestätigt</li>' +
+  '<li><strong>Stärke Deals auf GMV Max skalieren</strong> — 142x ROI bei €278 Ausgaben. Budget deutlich erhöhen</li>' +
+  '<li><strong>LIVE GMV Max Kampagne 1 reparieren</strong> — €137.697 Umsatz bewiesen, 7,52x ROI. Philips Germany Konto neu verbinden (ID: 7517310666145285142)</li>' +
+  '</ul>' +
+  '<h3>Diese Woche — Creator-Programm</h3><ul>' +
+  '<li><strong>Samples an beautytalkmitanna senden</strong> — 213K Follower, noch nie ein Sample erhalten. deal_detektivin bekam 1 Sample und generierte 112x ROI</li>' +
+  '<li><strong>Outreach-Nachrichten personalisieren</strong> — Aktuelle Akzeptanzrate: 8,5% (46/544). Ziel: 20%+</li>' +
+  '<li><strong>Aktualisierte Produktbriefs an jonas.jamess und danbor00</strong> — 28% und 23% Retourenquoten</li>' +
+  '</ul>' +
+  '<p>' + bdg('b-blue','Erwarteter Einfluss') + ' Diese Maßnahmen könnten zusammen <strong>€15.000–30.000 wochentlichen GMV</strong> innerhalb von 2 Wochen wiederherstellen.</p>';
+}
+
+
+function answerDE(raw) {
+  var q = raw.toLowerCase().replace(/[?!.,;]/g,'').trim();
+
+  // Plans and actions - FIRST to avoid broad keyword collisions
+  if(/woche|week|diese.*woche|nachste.*woche|wochenplan|was.*tun|soll.*tun|action.*plan|this.*week|next.*week/.test(q)) return topic_weekly_plan_de();
+  if(/1.*jahr|one.*year|12.*monat|jahresplan|1.year|year.*plan|annual.*plan|verbessern|improve.*stat|change.*stat|besser.*machen/.test(q)) return topic_one_year_plan_de();
+  if(/prioritat|priorität|zuerst|dringend|sofort|urgent|was.*first|top.*action|right.*now/.test(q)) return topic_priority_de();
+  if(/alle.*verbesserung|verbesserungsplan|all.*improv|alle.*hebel|wachstum|how.*grow/.test(q)) return topic_all_improvements_de();
+  if(/3.*jahr|drei.*jahr|3.year|three.*year|2027|2028|langfristig|strategieplan|roadmap|strategie/.test(q)) return topic_three_year_de();
+  if(/prognose|forecast|vorhersage|predict|juni|june|juli|july|august|september|oktober|october|5.*monat|5.*month/.test(q)) return topic_forecast_de();
+  if(/q4|herbst|autumn|weihnachten|christmas|black.*friday|schwarzer.*freitag/.test(q)) return topic_q4_de();
+
+  // GMV Max
+  if(/gmv.*max.*live|live.*gmv.*max|live.*gmv|live.*ads/.test(q)) return topic_live_gmvmax_de();
+  if(/gmv.*max.*jahr|gmv.*max.*year|gmv.*max.*full|gmv.*max.*all|gmv.*max.*hist|alle.*kampagne.*gmv/.test(q)) return topic_gmvmax_fullyear_de();
+  if(/gmv.*max|shop.*ads|best.*creative|creative.*roi|dorian|starke.*deals|114/.test(q)) return topic_gmvmax_de();
+  if(/ads.*manager|full.*year.*ads|jahres.*ads|total.*spend|ad.*roi|296|1.93/.test(q)) return topic_ads_overview_de();
+
+  // GMV and revenue
+  if(/gmv|umsatz|revenue|einnahmen|wie.*viel.*umsatz|total.*revenue/.test(q)) return topic_gmv_fullyear_de();
+
+  // Campaigns
+  if(/kampagn|campaign|kagn|kamp|mega.*sale|spring.*sale|summer.*sale|april.*deal|winter.*sale/.test(q)) return topic_campaigns_de();
+
+  // Creators
+  if(/creator|influencer|misstestet|reapez|danbor|jonas.*james|deal_detektiv|emmasbeauty|dorianlebt|kristina/.test(q)) return topic_top_creators_de();
+
+  // Operations
+  if(/lager|stock|vorrätig|vorratig|oos|nicht.*vorratig|not.*stock|produkt|product|oneblade|lumea|sonicare|facial/.test(q)) return topic_product_catalogue_de();
+  if(/retoure|retour|rückgabe|ruckgabe|refund|return.*rate|warum.*zurück/.test(q)) return topic_refunds_de();
+  if(/live.*performance|live.*stream|live.*trend|live.*ergebnis|wie.*live|daily.*live/.test(q)) return topic_live_de();
+  if(/video.*performance|video.*trend|video.*ergebnis|gpm|daily.*video/.test(q)) return topic_video_de();
+  if(/transaktion|transaction|creator.*programme|programme.*history|0.5.*prozent|42.*creator|daily.*creator|8241/.test(q)) return topic_transaction_analysis_de();
+  if(/affiliate.*stat|affiliate.*core|affiliate.*uberblick|affiliate.*overview/.test(q)) return topic_affiliate_stats_de();
+  if(/outreach|creator.*einladung|kontakt.*creator/.test(q)) return topic_affiliate_stats_de();
+  if(/rabatt|discount|promotion.*tool|88.*prozent|promo/.test(q)) return topic_promo_tools_de();
+  if(/sample|muster.*probe/.test(q)) return topic_affiliate_stats_de();
+  if(/produkt.*karte|product.*card|card.*funnel|karte.*funnel/.test(q)) return topic_affiliate_stats_de();
+
+  // History
+  if(/2025|launch|black.*friday|schwarzer.*freitag|erste.*tage|start.*nov|history|how.*long/.test(q)) return topic_2025_history_de();
+
+  // Data overview - very specific only
+  if(/welche.*daten|welche.*berichte|geladene.*daten|what.*data|which.*report|how many.*report/.test(q)) return topic_whatdata_de();
+  if(/dashboard|warnung|alert|shop.*health|übersicht|ubersicht/.test(q)) return topic_dashboard_de();
+  if(/gesundheit|health.*check|wie.*lauft|status|alles|everything/.test(q)) return topic_overall_de();
+
+  // Keyword fallback - catches typos, partial words, English mixed in
+  if(q.includes('kamp') || q.includes('kagn') || q.includes('sale')) return topic_campaigns_de();
+  if(q.includes('gmv') || q.includes('umsatz')) return topic_gmv_fullyear_de();
+  if(q.includes('creator') || q.includes('influencer')) return topic_top_creators_de();
+  if(q.includes('retour') || q.includes('refund')) return topic_refunds_de();
+  if(q.includes('lager') || q.includes('stock') || q.includes('produkt')) return topic_product_catalogue_de();
+  if(q.includes('live')) return topic_live_de();
+  if(q.includes('video')) return topic_video_de();
+  if(q.includes('forecast') || q.includes('prognos')) return topic_forecast_de();
+  if(q.includes('strateg') || q.includes('plan') || q.includes('jahr') || q.includes('year')) return topic_three_year_de();
+  if(q.includes('woche') || q.includes('week') || q.includes('heute') || q.includes('today')) return topic_weekly_plan_de();
+  if(q.includes('verbess') || q.includes('improv') || q.includes('besser') || q.includes('better')) return topic_all_improvements_de();
+  if(q.includes('priorit') || q.includes('dringend') || q.includes('urgent')) return topic_priority_de();
+  if(q.includes('affiliate') || q.includes('provision') || q.includes('transaction')) return topic_transaction_analysis_de();
+  if(q.includes('2025') || q.includes('launch')) return topic_2025_history_de();
+
+  return null;
+}
+
+
+// ── LANGUAGE ──────────────────────────────────────────────────────
+var currentLang = 'en';
+
+var UI_EN = {
+  title:'Philips TikTok Shop Analytics',
+  subtitle:'Germany \u00b7 Nov 2025 \u2013 May 2026 \u00b7 Ask in English or German',
+  qs_lbl:'Quick questions',
+  q1_t:'What to do this week?', q1_d:'Concrete action plan from live data',
+  q2_t:'1-year plan', q2_d:'Month-by-month improvement roadmap',
+  q3_t:'GMV Max full year', q3_d:'All campaigns, ROI, top creators',
+  q4_t:'Creator analysis', q4_d:'Who to scale, who to pause',
+  q5_t:'3-year strategy', q5_d:'2026 to 2027 to 2028 roadmap',
+  q6_t:'Refund problem', q6_d:'24.9% affiliate rate \u2014 root cause',
+  hint:'Philips TikTok Shop Germany \u00b7 EN / DE',
+  hdr_sub:'Germany \u00b7 Nov 2025 \u2013 May 2026',
+  home:'\u2190 Home',
+  chip_alerts:'\ud83d\udea8 Alerts', chip_health:'Health', chip_gmv:'GMV',
+  chip_camp:'Campaigns', chip_gmvmax:'GMV Max', chip_gmvmaxyear:'GMV Max year',
+  chip_creatives:'Best creatives', chip_livegmvmax:'\ud83d\udd34 LIVE GMV Max',
+  chip_ads:'Full-year ads', chip_creators:'Creators', chip_refunds:'Refunds',
+  chip_stock:'Stock', chip_live:'LIVE', chip_video:'Video',
+  chip_programme:'Programme', chip_discounts:'Discounts',
+  chip_week:'\u26a1 This week', chip_1yr:'\ud83d\udcc5 1-year plan',
+  chip_forecast:'\ud83d\udcc8 Forecast', chip_3yr:'3-year plan',
+  chip_prio:'Priorities', chip_improv:'Improvements',
+  chip_launch:'2025 launch', chip_data:'What data?'
+};
+
+var UI_DE = {
+  title:'Philips TikTok Shop Analytics',
+  subtitle:'Deutschland \u00b7 Nov 2025 \u2013 Mai 2026 \u00b7 Frag auf Englisch oder Deutsch',
+  qs_lbl:'Schnelle Fragen',
+  q1_t:'Was diese Woche tun?', q1_d:'Konkreter Aktionsplan aus Live-Daten',
+  q2_t:'1-Jahres-Plan', q2_d:'Monatlicher Verbesserungsfahrplan',
+  q3_t:'GMV Max Gesamtjahr', q3_d:'Alle Kampagnen, ROI, Top Creator',
+  q4_t:'Creator-Analyse', q4_d:'Wen skalieren, wen pausieren',
+  q5_t:'3-Jahres-Strategie', q5_d:'2026 \u2192 2027 \u2192 2028 Fahrplan',
+  q6_t:'Retourenproblem', q6_d:'24,9% Affiliate-Rate \u2014 Ursache',
+  hint:'Philips TikTok Shop Deutschland \u00b7 EN / DE',
+  hdr_sub:'Deutschland \u00b7 Nov 2025 \u2013 Mai 2026',
+  home:'\u2190 Start',
+  chip_alerts:'\ud83d\udea8 Warnungen', chip_health:'Gesundheit', chip_gmv:'GMV',
+  chip_camp:'Kampagnen', chip_gmvmax:'GMV Max', chip_gmvmaxyear:'GMV Max Jahr',
+  chip_creatives:'Beste Creatives', chip_livegmvmax:'\ud83d\udd34 LIVE GMV Max',
+  chip_ads:'Jahres-Ads', chip_creators:'Creator', chip_refunds:'Retouren',
+  chip_stock:'Lager', chip_live:'LIVE', chip_video:'Video',
+  chip_programme:'Programm', chip_discounts:'Rabatte',
+  chip_week:'\u26a1 Diese Woche', chip_1yr:'\ud83d\udcc5 1-Jahres-Plan',
+  chip_forecast:'\ud83d\udcc8 Prognose', chip_3yr:'3-Jahres-Plan',
+  chip_prio:'Priorit\u00e4ten', chip_improv:'Verbesserungen',
+  chip_launch:'2025 Start', chip_data:'Welche Daten?'
+};
+
+function setLang(l) {
+  currentLang = l;
+  document.getElementById('btn-en').className = 'tog-btn ' + (l==='en' ? 'active-blue' : 'inactive');
+  document.getElementById('btn-de').className = 'tog-btn ' + (l==='de' ? 'active-blue' : 'inactive');
+  updateUI(l === 'de' ? UI_DE : UI_EN);
+}
+
+function updateUI(u) {
+  var m = {
+    'ui-title':u.title,'ui-subtitle':u.subtitle,'ui-qs-lbl':u.qs_lbl,
+    'ui-q1-t':u.q1_t,'ui-q1-d':u.q1_d,'ui-q2-t':u.q2_t,'ui-q2-d':u.q2_d,
+    'ui-q3-t':u.q3_t,'ui-q3-d':u.q3_d,'ui-q4-t':u.q4_t,'ui-q4-d':u.q4_d,
+    'ui-q5-t':u.q5_t,'ui-q5-d':u.q5_d,'ui-q6-t':u.q6_t,'ui-q6-d':u.q6_d,
+    'ui-hint':u.hint,'ui-hdr-sub':u.hdr_sub,'ui-home':u.home,
+    'ui-chip-alerts':u.chip_alerts,'ui-chip-health':u.chip_health,
+    'ui-chip-gmv':u.chip_gmv,'ui-chip-camp':u.chip_camp,
+    'ui-chip-gmvmax':u.chip_gmvmax,'ui-chip-gmvmaxyear':u.chip_gmvmaxyear,
+    'ui-chip-creatives':u.chip_creatives,'ui-chip-livegmvmax':u.chip_livegmvmax,
+    'ui-chip-ads':u.chip_ads,'ui-chip-creators':u.chip_creators,
+    'ui-chip-refunds':u.chip_refunds,'ui-chip-stock':u.chip_stock,
+    'ui-chip-live':u.chip_live,'ui-chip-video':u.chip_video,
+    'ui-chip-programme':u.chip_programme,'ui-chip-discounts':u.chip_discounts,
+    'ui-chip-week':u.chip_week,'ui-chip-1yr':u.chip_1yr,
+    'ui-chip-forecast':u.chip_forecast,'ui-chip-3yr':u.chip_3yr,
+    'ui-chip-prio':u.chip_prio,'ui-chip-improv':u.chip_improv,
+    'ui-chip-launch':u.chip_launch,'ui-chip-data':u.chip_data
+  };
+  for (var id in m) { var el=document.getElementById(id); if(el) el.textContent=m[id]; }
+  var wq=document.getElementById('wq'); if(wq) wq.placeholder='Ask anything in English or German…';
+  var cq=document.getElementById('cq'); if(cq) cq.placeholder='Ask anything…';
+}
+
+// ── API KEY ────────────────────────────────────────────────────────
+var userApiKey = '';
+try { userApiKey = localStorage.getItem('ph_api_key') || ''; } catch(e) {}
+
+function setApiMode(m) {
+  var bar = document.getElementById('api-bar');
+  var btnOff = document.getElementById('btn-no-key');
+  var btnOn = document.getElementById('btn-with-key');
+  if (m === 'on') {
+    bar.classList.remove('hidden');
+    btnOn.className = 'tog-btn active-green';
+    btnOff.className = 'tog-btn inactive';
+    document.getElementById('api-key-input').value = userApiKey;
+    if (userApiKey) document.getElementById('api-msg').textContent = 'Key saved';
+    document.getElementById('api-key-input').focus();
+  } else {
+    bar.classList.add('hidden');
+    btnOff.className = 'tog-btn active-blue';
+    btnOn.className = 'tog-btn inactive';
+  }
+}
+
+function saveApiKey() {
+  var k = document.getElementById('api-key-input').value.trim();
+  userApiKey = k;
+  try { k ? localStorage.setItem('ph_api_key',k) : localStorage.removeItem('ph_api_key'); } catch(e){}
+  var msg = document.getElementById('api-msg');
+  msg.textContent = k ? '\u2713 Saved' : 'Cleared';
+  setTimeout(function(){ msg.textContent = k ? 'Key saved' : ''; }, 2000);
+}
+
+function clearApiKey() {
+  userApiKey = '';
+  try { localStorage.removeItem('ph_api_key'); } catch(e){}
+  document.getElementById('api-key-input').value = '';
+  document.getElementById('api-msg').textContent = 'Cleared';
+  setTimeout(function(){ document.getElementById('api-msg').textContent = ''; }, 2000);
+}
+
+async function getApiAnswer(q) {
+  if (!userApiKey) return null;
+  try {
+    // Use allorigins proxy which works from local files
+    var body = JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 800,
+      system: 'You are an analytics assistant for the Philips TikTok Shop Germany. Answer concisely and accurately. Respond in the same language as the question.',
+      messages: [{role:'user', content:q}]
+    });
+    var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+    var r = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': userApiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: body
+    });
+    var d = await r.json();
+    if (d.content && d.content[0]) {
+      var t = d.content[0].text;
+      t = t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+      t = t.replace(/^[-•] (.+)$/gm,'<li>$1</li>');
+      t = t.replace(/(<li>[^]*?<\/li>)/g,'<ul>$1</ul>');
+      t = t.replace(/\n\n/g,'</p><p>');
+      return '<p>' + t + '</p>';
+    }
+    if (d.error) return '<p class="dn">API Error: ' + d.error.message + '</p>';
+  } catch(e) { return '<p class="dn">Error: ' + e.message + '</p>'; }
+  return null;
+}
+
+function getAnswer(q) {
+  return currentLang === 'de' ? answerDE(q) : answer(q);
+}
+
+// ── CHAT FUNCTIONS ─────────────────────────────────────────────────
+function addMsg(role, html) {
+  var msgs = document.getElementById('msgs');
+  var wrap = document.createElement('div'); wrap.className = 'msg ' + role;
+  var av = document.createElement('div'); av.className = 'av ' + (role==='user'?'user':'ai');
+  av.textContent = role === 'user' ? 'You' : 'PH';
+  var bub = document.createElement('div'); bub.className = 'bubble';
+  bub.innerHTML = role === 'user' ? '<p>' + html.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>' : html;
+  wrap.appendChild(av); wrap.appendChild(bub);
+  msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  var msgs = document.getElementById('msgs');
+  var id = 'ty' + Date.now();
+  var wrap = document.createElement('div'); wrap.className = 'msg assistant'; wrap.id = id;
+  var av = document.createElement('div'); av.className = 'av ai'; av.textContent = 'PH';
+  var bub = document.createElement('div'); bub.className = 'bubble';
+  bub.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  wrap.appendChild(av); wrap.appendChild(bub);
+  msgs.appendChild(wrap); msgs.scrollTop = 99999;
+  return id;
+}
+
+function setTyping(id, html) {
+  var el = document.getElementById(id);
+  if (el) { el.querySelector('.bubble').innerHTML = html; document.getElementById('msgs').scrollTop = 99999; }
+}
+
+function goChat(q) {
+  document.getElementById('welcome').classList.add('gone');
+  document.getElementById('chat').classList.add('on');
+  if (!q) return;
+  addMsg('user', q);
+  var tid = showTyping();
+  var local = getAnswer(q);
+  var isGeneric = local && (local.includes('display:grid') || local.includes('reports fully loaded') || local.includes('Reports geladen'));
+
+  if (local && !isGeneric) {
+    setTimeout(function(){ setTyping(tid, local); }, 180);
+  } else if (userApiKey) {
+    getApiAnswer(q).then(function(api) {
+      setTyping(tid, api || local || '<p>No answer found.</p>');
+    });
+  } else {
+    var fb = currentLang === 'de'
+      ? '<p>Keine gespeicherte Antwort gefunden.</p><p style="font-size:12px;color:#6b7280;margin-top:5px">Klicke auf <strong>API Key</strong> oben rechts und gib deinen Anthropic Key ein f\u00fcr KI-Antworten auf beliebige Fragen.</p>'
+      : '<p>No built-in answer for this question.</p><p style="font-size:12px;color:#6b7280;margin-top:5px">Click <strong>API Key</strong> in the top right and enter your Anthropic key to get AI answers for any question.</p>';
+    setTimeout(function(){ setTyping(tid, local || fb); }, 180);
+  }
+}
+
+function goHome() {
+  document.getElementById('welcome').classList.remove('gone');
+  document.getElementById('chat').classList.remove('on');
+}
+
+function ask(q) { goChat(q); }
+
+function sendWelcome() {
+  var inp = document.getElementById('wq');
+  var q = inp.value.trim(); if (!q) return;
+  inp.value = ''; goChat(q);
+}
+
+function send() {
+  var inp = document.getElementById('cq');
+  var q = inp.value.trim(); if (!q) return;
+  inp.value = ''; inp.style.height = '40px';
+  goChat(q);
+}
+
+// Init
+(function(){
+  if (userApiKey) setApiMode('on'); else setApiMode('off');
+})();
+</script>
+</body>
+</html>
